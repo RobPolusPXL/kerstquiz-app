@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Kerstquiz: moderator</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="banner" class="banner" hidden>Verbinding verbroken… opnieuw verbinden</div>
+
+<div id="login" class="wrap" hidden>
+  <h1>🎄 Moderator</h1>
+  <div class="card">
+    <p>Wachtwoord</p>
+    <input id="pw" type="password" autocomplete="current-password">
+    <br><br>
+    <button class="primary" id="pwGo" style="width:100%">Aanmelden</button>
+    <div class="err" id="pwErr"></div>
+  </div>
+</div>
+
+<div id="dash" class="admin" hidden>
+  <div class="topbar">
+    <div>
+      <h1 style="margin:0" id="dTitle"></h1>
+      <div class="small mute">Spelers gaan naar <b id="joinUrl"></b></div>
+    </div>
+    <div class="row wrap-r">
+      <a class="btn" href="/tv" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center">📺 TV-scherm</a>
+      <span id="sbBtn"></span>
+    </div>
+  </div>
+
+  <div class="card" id="ctl"></div>
+
+  <div class="grid2">
+    <div class="card" id="pl"></div>
+    <div class="card" id="sbd"></div>
+  </div>
+
+  <div class="card" id="ans"></div>
+
+  <div class="card">
+    <h2>Beheer</h2>
+    <div class="row wrap-r" style="margin-bottom:10px">
+      <input id="newPlayer" placeholder="Speler vooraf toevoegen" style="max-width:260px" maxlength="24">
+      <button id="addPlayer">Toevoegen</button>
+      <span class="mute small" style="margin-left:10px">Max. spelers</span>
+      <input id="maxPlayers" type="number" min="1" max="60" style="max-width:90px">
+      <button id="setMax">Opslaan</button>
+    </div>
+    <div class="row wrap-r">
+      <button data-cmd="reloadQuiz">↻ Vragen herladen (questions.json)</button>
+      <button class="bad" data-cmd="reset" data-what="game" data-confirm="Alle antwoorden en punten wissen? Spelers blijven staan.">Antwoorden &amp; punten wissen</button>
+      <button class="bad" data-cmd="reset" data-what="all" data-confirm="ALLES wissen, ook alle spelers?">Alles wissen</button>
+    </div>
+  </div>
+</div>
+
+<script src="/common.js"></script>
+<script src="/admin.js"></script>
+</body>
+</html>
