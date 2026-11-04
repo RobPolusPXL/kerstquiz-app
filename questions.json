@@ -1,57 +1,341 @@
 {
   "title": "Kerstquiz 2026",
-  "_uitleg": "Vragen per ronde. mode: 'paced' = iedereen vult op eigen tempo in binnen de tijd, 'buzzer' = live, moderator stuurt vraag per vraag. type: 'text' | 'number' | 'choice'. Bij 'choice': options + correct (index vanaf 0). Bij 'text'/'number': answers = lijst aanvaarde antwoorden (hoofdletters/accenten/leestekens maken niet uit, kleine tikfouten worden getolereerd; de moderator kan altijd corrigeren). Optioneel: image ('/media/bestand.jpg'), points (standaard 1), note (enkel zichtbaar voor moderator). Geef vragen een vaste 'id' als je ze nog wil herordenen nadat het spel gestart is. Dit zijn voorbeeldvragen uit editie 1: vervang door die van 2026.",
+  "_uitleg": "Vragen per ronde. mode: 'stepped' = vraag per vraag, jij start elke vraag (timer = seconds per vraag), 'buzzer' = live, eerste die buzzt mag antwoorden, 'paced' = alle vragen tegelijk op eigen tempo binnen 'minutes'. type: 'text' | 'number' | 'choice'. Bij 'choice': options + correct (index vanaf 0). Bij 'text'/'number': answers = lijst aanvaarde antwoorden (hoofdletters/accenten/leestekens maken niet uit, kleine tikfouten worden getolereerd; de moderator kan altijd corrigeren). Optioneel: image ('/media/bestand.jpg'), points (standaard 1), note (enkel zichtbaar voor moderator). Geef vragen een vaste 'id' als je ze nog wil herordenen nadat het spel gestart is. Dit zijn voorbeeldvragen uit editie 1: vervang door die van 2026.",
   "rounds": [
     {
       "id": "r1",
       "title": "Algemene kennis",
-      "mode": "paced",
+      "mode": "stepped",
       "minutes": 15,
-      "intro": "Vul op je eigen tempo in. Je kan antwoorden aanpassen tot de tijd om is.",
+      "intro": "We gaan vraag per vraag. Antwoord binnen de tijd.",
       "questions": [
-        { "type": "text", "text": "We kennen allemaal \"Les lacs du Connemara\"! Maar in welk land liggen deze meren?", "answers": ["Ierland", "Ireland"] },
-        { "type": "number", "text": "Er zijn 100 mensen in een zaal. 99 zijn linkshandig. Hoeveel linkshandige mensen moeten de zaal verlaten om op 98% linkshandige mensen te komen?", "answers": ["50"] },
-        { "type": "text", "text": "Wat is de hoofdstad van Kiribati?", "answers": ["Tarawa", "Zuid-Tarawa", "South Tarawa"] },
-        { "type": "choice", "text": "Waar gebruikt men de euro niet?", "options": ["Frans-Guyana", "Curaçao", "Guadeloupe"], "correct": 1 },
-        { "type": "text", "text": "Welke letters komen niet voor in het Italiaanse alfabet?", "answers": ["J, K, X, W, Y", "J K W X Y"], "note": "Alle vijf nodig. Controleer onvolledige antwoorden manueel." },
-        { "type": "text", "text": "Wanneer gaat de zomertijd in?", "answers": ["De laatste zondag van maart", "laatste zondag in maart"] },
-        { "type": "choice", "text": "Als je op maandag na de zomertijdwissel je klok niet verzet, ben je dan een uur te vroeg of een uur te laat op je werk?", "options": ["Een uur te vroeg", "Een uur te laat"], "correct": 1 },
-        { "type": "number", "text": "Hoeveel landen zijn er in de wereld?", "answers": ["193", "194", "195"], "note": "193 VN-lidstaten, 194 met Vaticaanstad, 195 met Palestina: alle drie aanvaard." },
-        { "type": "text", "text": "Op welke datum vonden de aanslagen in Zaventem en Maalbeek plaats?", "answers": ["22-3-2016", "22/3/2016", "22-03-2016", "22 maart 2016", "22.3.2016"] },
-        { "type": "number", "text": "Hoeveel is de helft van 8 + 8? (8 is niet juist!)", "answers": ["12"], "note": "De helft van 8 is 4, 4 + 8 = 12." },
-        { "type": "number", "text": "Hoeveel maanden hebben 30 dagen?", "answers": ["11"], "note": "Strikvraag: 11 maanden hebben (minstens) 30 dagen. Het 'gewone' antwoord 4 is hier fout." }
-      ]
+        {
+          "type": "text",
+          "text": "We kennen allemaal \"Les lacs du Connemara\"! Maar in welk land liggen deze meren?",
+          "answers": [
+            "Ierland",
+            "Ireland"
+          ]
+        },
+        {
+          "type": "number",
+          "text": "Er zijn 100 mensen in een zaal. 99 zijn linkshandig. Hoeveel linkshandige mensen moeten de zaal verlaten om op 98% linkshandige mensen te komen?",
+          "answers": [
+            "50"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Wat is de hoofdstad van Kiribati?",
+          "answers": [
+            "Tarawa",
+            "Zuid-Tarawa",
+            "South Tarawa"
+          ]
+        },
+        {
+          "type": "choice",
+          "text": "Waar gebruikt men de euro niet?",
+          "options": [
+            "Frans-Guyana",
+            "Curaçao",
+            "Guadeloupe"
+          ],
+          "correct": 1
+        },
+        {
+          "type": "text",
+          "text": "Welke letters komen niet voor in het Italiaanse alfabet?",
+          "answers": [
+            "J, K, X, W, Y",
+            "J K W X Y"
+          ],
+          "note": "Alle vijf nodig. Controleer onvolledige antwoorden manueel."
+        },
+        {
+          "type": "text",
+          "text": "Wanneer gaat de zomertijd in?",
+          "answers": [
+            "De laatste zondag van maart",
+            "laatste zondag in maart"
+          ]
+        },
+        {
+          "type": "choice",
+          "text": "Als je op maandag na de zomertijdwissel je klok niet verzet, ben je dan een uur te vroeg of een uur te laat op je werk?",
+          "options": [
+            "Een uur te vroeg",
+            "Een uur te laat"
+          ],
+          "correct": 1
+        },
+        {
+          "type": "number",
+          "text": "Hoeveel landen zijn er in de wereld?",
+          "answers": [
+            "193",
+            "194",
+            "195"
+          ],
+          "note": "193 VN-lidstaten, 194 met Vaticaanstad, 195 met Palestina: alle drie aanvaard."
+        },
+        {
+          "type": "text",
+          "text": "Op welke datum vonden de aanslagen in Zaventem en Maalbeek plaats?",
+          "answers": [
+            "22-3-2016",
+            "22/3/2016",
+            "22-03-2016",
+            "22 maart 2016",
+            "22.3.2016"
+          ]
+        },
+        {
+          "type": "number",
+          "text": "Hoeveel is de helft van 8 + 8? (8 is niet juist!)",
+          "answers": [
+            "12"
+          ],
+          "note": "De helft van 8 is 4, 4 + 8 = 12."
+        },
+        {
+          "type": "number",
+          "text": "Hoeveel maanden hebben 30 dagen?",
+          "answers": [
+            "11"
+          ],
+          "note": "Strikvraag: 11 maanden hebben (minstens) 30 dagen. Het 'gewone' antwoord 4 is hier fout."
+        }
+      ],
+      "seconds": 45
     },
     {
       "id": "r2",
       "title": "Het jaar in beeld",
-      "mode": "paced",
+      "mode": "stepped",
       "minutes": 15,
-      "intro": "Een terugblik, maand per maand.",
+      "intro": "Een terugblik op het jaar, vraag per vraag.",
       "questions": [
-        { "type": "choice", "text": "Januari: gigantische bosbranden in de Verenigde Staten. Welke grote stad werd zwaar getroffen?", "options": ["Los Angeles", "San Diego", "San Francisco"], "correct": 0 },
-        { "type": "choice", "text": "Januari: China hanteert elk jaar een dier van het jaar. Welk dier is het voor 2025?", "options": ["Draak", "Slang", "Tijger"], "correct": 1 },
-        { "type": "text", "text": "Februari: op 3 februari legde de nieuwe federale regering de eed af. Hoe heet deze regering? (De vorige heette Vivaldi.)", "answers": ["Arizona", "Arizona-regering", "De Wever"] },
-        { "type": "text", "text": "Februari: Trump wou er de 'Riviera van het Midden-Oosten' van maken. Over welke plaats ging dit?", "answers": ["Gaza", "Gazastrook", "Gaza-stad"] },
-        { "type": "choice", "text": "Maart: welke film won de Oscar voor Beste Film?", "options": ["Anora", "The Brutalist", "Conclave"], "correct": 0 },
-        { "type": "choice", "text": "April: de paus stierf. Wat was zijn naam?", "options": ["Franciscus", "Pius", "Johannes Paulus", "Benedictus", "Leo"], "correct": 0 },
-        { "type": "choice", "text": "April: grote black-out in Europa. In welke 2 landen?", "options": ["Spanje en Portugal", "Griekenland en Noord-Macedonië", "Polen en Litouwen"], "correct": 0 },
-        { "type": "choice", "text": "Mei: welk land won het Eurovisiesongfestival?", "options": ["Nederland", "Oostenrijk", "Zwitserland", "Portugal"], "correct": 1 },
-        { "type": "choice", "text": "Mei: we kregen een nieuwe paus. Wie?", "options": ["Franciscus", "Pius", "Johannes Paulus", "Benedictus", "Leo"], "correct": 4 },
-        { "type": "text", "text": "Juni: de baas van Amazon trouwde. Wat is zijn naam?", "answers": ["Jeff Bezos", "Bezos"] },
-        { "type": "choice", "text": "Juni: België werd Europees kampioen basket bij de vrouwen. Wat is de bijnaam van deze ploeg?", "options": ["Red Panthers", "Belgian Cats"], "correct": 1 },
-        { "type": "text", "text": "Juli: na 16 jaar gaf een Britse band van twee broers een reünieconcertreeks van 41 concerten. Hoe heet de band?", "answers": ["Oasis"] },
-        { "type": "text", "text": "Juli: een muziekicoon stierf. Hij had een bekende realityreeks en was zanger van Black Sabbath. Wat was zijn naam?", "answers": ["Ozzy Osbourne", "Ozzy"] },
-        { "type": "choice", "text": "Augustus: wie won de Tour de France Femmes?", "options": ["Lotte Kopecky", "Pauline Ferrand-Prévot", "Demi Vollering"], "correct": 1 },
-        { "type": "choice", "text": "September: een Amerikaanse conservatieve activist en Trump-aanhanger werd doodgeschoten. Wat was zijn naam?", "options": ["Charlie Kirk", "Andrew Newson", "Kenneth Vanloo", "Jonas Nixon"], "correct": 0 },
-        { "type": "text", "text": "September: België erkent deze staat vanaf nu formeel. Welke?", "answers": ["Palestina", "Staat Palestina"] },
-        { "type": "choice", "text": "Oktober: de achtste meest intense Atlantische orkaan ooit, de zwaarste in 2 eeuwen in Jamaica. Hoe heet de orkaan?", "options": ["Melissa", "Sara", "Vivian", "Lesley"], "correct": 0 },
-        { "type": "text", "text": "Oktober: in welk museum gebeurde een spectaculaire juwelenroof?", "answers": ["Louvre", "Het Louvre", "Louvre Parijs"] },
-        { "type": "choice", "text": "November: Zohran Mamdani werd verkozen tot burgemeester van New York. Wat klopt?", "options": ["Hij won met 80%, de grootste overwinning ooit", "Hij is de eerste Republikein met andere roots die burgemeester wordt in een van de 10 grootste steden", "Hij is de oudste burgemeester ooit", "Hij is de eerste moslimburgemeester van New York"], "correct": 3 },
-        { "type": "choice", "text": "November: op 13 november 2025 kleurde de Eiffeltoren blauw, wit en rood. Waarom?", "options": ["Nationale feestdag", "Herdenking aanslagen", "Verjaardag van de regerende premier"], "correct": 1 },
-        { "type": "choice", "text": "December: wie werd wereldkampioen F1?", "options": ["Norris", "Verstappen", "Hamilton", "Leclerc"], "correct": 0, "note": "Controleer dit antwoord vooraf." },
-        { "type": "choice", "text": "December: wat is het meest gestreamde nummer op Spotify in 2025?", "options": ["\"Die with a Smile\" - Lady Gaga & Bruno Mars", "\"Birds of a Feather\" - Billie Eilish", "\"APT.\" - ROSÉ & Bruno Mars"], "correct": 0, "note": "Controleer dit antwoord vooraf." }
-      ]
+        {
+          "type": "choice",
+          "text": "Januari: gigantische bosbranden in de Verenigde Staten. Welke grote stad werd zwaar getroffen?",
+          "options": [
+            "Los Angeles",
+            "San Diego",
+            "San Francisco"
+          ],
+          "correct": 0
+        },
+        {
+          "type": "choice",
+          "text": "Januari: China hanteert elk jaar een dier van het jaar. Welk dier is het voor 2025?",
+          "options": [
+            "Draak",
+            "Slang",
+            "Tijger"
+          ],
+          "correct": 1
+        },
+        {
+          "type": "text",
+          "text": "Februari: op 3 februari legde de nieuwe federale regering de eed af. Hoe heet deze regering? (De vorige heette Vivaldi.)",
+          "answers": [
+            "Arizona",
+            "Arizona-regering",
+            "De Wever"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Februari: Trump wou er de 'Riviera van het Midden-Oosten' van maken. Over welke plaats ging dit?",
+          "answers": [
+            "Gaza",
+            "Gazastrook",
+            "Gaza-stad"
+          ]
+        },
+        {
+          "type": "choice",
+          "text": "Maart: welke film won de Oscar voor Beste Film?",
+          "options": [
+            "Anora",
+            "The Brutalist",
+            "Conclave"
+          ],
+          "correct": 0
+        },
+        {
+          "type": "choice",
+          "text": "April: de paus stierf. Wat was zijn naam?",
+          "options": [
+            "Franciscus",
+            "Pius",
+            "Johannes Paulus",
+            "Benedictus",
+            "Leo"
+          ],
+          "correct": 0
+        },
+        {
+          "type": "choice",
+          "text": "April: grote black-out in Europa. In welke 2 landen?",
+          "options": [
+            "Spanje en Portugal",
+            "Griekenland en Noord-Macedonië",
+            "Polen en Litouwen"
+          ],
+          "correct": 0
+        },
+        {
+          "type": "choice",
+          "text": "Mei: welk land won het Eurovisiesongfestival?",
+          "options": [
+            "Nederland",
+            "Oostenrijk",
+            "Zwitserland",
+            "Portugal"
+          ],
+          "correct": 1
+        },
+        {
+          "type": "choice",
+          "text": "Mei: we kregen een nieuwe paus. Wie?",
+          "options": [
+            "Franciscus",
+            "Pius",
+            "Johannes Paulus",
+            "Benedictus",
+            "Leo"
+          ],
+          "correct": 4
+        },
+        {
+          "type": "text",
+          "text": "Juni: de baas van Amazon trouwde. Wat is zijn naam?",
+          "answers": [
+            "Jeff Bezos",
+            "Bezos"
+          ]
+        },
+        {
+          "type": "choice",
+          "text": "Juni: België werd Europees kampioen basket bij de vrouwen. Wat is de bijnaam van deze ploeg?",
+          "options": [
+            "Red Panthers",
+            "Belgian Cats"
+          ],
+          "correct": 1
+        },
+        {
+          "type": "text",
+          "text": "Juli: na 16 jaar gaf een Britse band van twee broers een reünieconcertreeks van 41 concerten. Hoe heet de band?",
+          "answers": [
+            "Oasis"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Juli: een muziekicoon stierf. Hij had een bekende realityreeks en was zanger van Black Sabbath. Wat was zijn naam?",
+          "answers": [
+            "Ozzy Osbourne",
+            "Ozzy"
+          ]
+        },
+        {
+          "type": "choice",
+          "text": "Augustus: wie won de Tour de France Femmes?",
+          "options": [
+            "Lotte Kopecky",
+            "Pauline Ferrand-Prévot",
+            "Demi Vollering"
+          ],
+          "correct": 1
+        },
+        {
+          "type": "choice",
+          "text": "September: een Amerikaanse conservatieve activist en Trump-aanhanger werd doodgeschoten. Wat was zijn naam?",
+          "options": [
+            "Charlie Kirk",
+            "Andrew Newson",
+            "Kenneth Vanloo",
+            "Jonas Nixon"
+          ],
+          "correct": 0
+        },
+        {
+          "type": "text",
+          "text": "September: België erkent deze staat vanaf nu formeel. Welke?",
+          "answers": [
+            "Palestina",
+            "Staat Palestina"
+          ]
+        },
+        {
+          "type": "choice",
+          "text": "Oktober: de achtste meest intense Atlantische orkaan ooit, de zwaarste in 2 eeuwen in Jamaica. Hoe heet de orkaan?",
+          "options": [
+            "Melissa",
+            "Sara",
+            "Vivian",
+            "Lesley"
+          ],
+          "correct": 0
+        },
+        {
+          "type": "text",
+          "text": "Oktober: in welk museum gebeurde een spectaculaire juwelenroof?",
+          "answers": [
+            "Louvre",
+            "Het Louvre",
+            "Louvre Parijs"
+          ]
+        },
+        {
+          "type": "choice",
+          "text": "November: Zohran Mamdani werd verkozen tot burgemeester van New York. Wat klopt?",
+          "options": [
+            "Hij won met 80%, de grootste overwinning ooit",
+            "Hij is de eerste Republikein met andere roots die burgemeester wordt in een van de 10 grootste steden",
+            "Hij is de oudste burgemeester ooit",
+            "Hij is de eerste moslimburgemeester van New York"
+          ],
+          "correct": 3
+        },
+        {
+          "type": "choice",
+          "text": "November: op 13 november 2025 kleurde de Eiffeltoren blauw, wit en rood. Waarom?",
+          "options": [
+            "Nationale feestdag",
+            "Herdenking aanslagen",
+            "Verjaardag van de regerende premier"
+          ],
+          "correct": 1
+        },
+        {
+          "type": "choice",
+          "text": "December: wie werd wereldkampioen F1?",
+          "options": [
+            "Norris",
+            "Verstappen",
+            "Hamilton",
+            "Leclerc"
+          ],
+          "correct": 0,
+          "note": "Controleer dit antwoord vooraf."
+        },
+        {
+          "type": "choice",
+          "text": "December: wat is het meest gestreamde nummer op Spotify in 2025?",
+          "options": [
+            "\"Die with a Smile\" - Lady Gaga & Bruno Mars",
+            "\"Birds of a Feather\" - Billie Eilish",
+            "\"APT.\" - ROSÉ & Bruno Mars"
+          ],
+          "correct": 0,
+          "note": "Controleer dit antwoord vooraf."
+        }
+      ],
+      "seconds": 30
     },
     {
       "id": "r3",
@@ -60,12 +344,50 @@
       "minutes": 15,
       "intro": "Wie het eerst buzzt, mag antwoorden. Fout? Dan mogen de anderen.",
       "questions": [
-        { "type": "text", "text": "Hoeveel poten heeft een spin?", "answers": ["8", "acht"] },
-        { "type": "text", "text": "Wat is de hoofdstad van Australië?", "answers": ["Canberra"] },
-        { "type": "text", "text": "In welk jaar viel de Berlijnse Muur?", "answers": ["1989"] },
-        { "type": "text", "text": "In welk land staat de Taj Mahal?", "answers": ["India"] },
-        { "type": "text", "text": "Wie schilderde De Nachtwacht?", "answers": ["Rembrandt", "Rembrandt van Rijn"] },
-        { "type": "text", "text": "Wat is het chemisch symbool voor goud?", "answers": ["Au"] }
+        {
+          "type": "text",
+          "text": "Hoeveel poten heeft een spin?",
+          "answers": [
+            "8",
+            "acht"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Wat is de hoofdstad van Australië?",
+          "answers": [
+            "Canberra"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "In welk jaar viel de Berlijnse Muur?",
+          "answers": [
+            "1989"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "In welk land staat de Taj Mahal?",
+          "answers": [
+            "India"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Wie schilderde De Nachtwacht?",
+          "answers": [
+            "Rembrandt",
+            "Rembrandt van Rijn"
+          ]
+        },
+        {
+          "type": "text",
+          "text": "Wat is het chemisch symbool voor goud?",
+          "answers": [
+            "Au"
+          ]
+        }
       ]
     }
   ]

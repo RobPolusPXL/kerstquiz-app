@@ -24,7 +24,13 @@ function createSocket(onMsg, onStatus) {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${proto}://${location.host}/ws`);
     ws.onopen = () => { retry = 0; onStatus(true); };
-    ws.onmessage = (e) => { try { onMsg(JSON.parse(e.data)); } catch (err) { console.error(err); } };
+    ws.onmessage = (e) => {
+      try {
+        const m = JSON.parse(e.data);
+        if (m.t === 'sp') { ws.send('{"t":"sa","i":' + m.i + '}'); return; }
+        onMsg(m);
+      } catch (err) { console.error(err); }
+    };
     ws.onclose = () => { onStatus(false); setTimeout(open, Math.min(4000, 400 + retry++ * 400)); };
     ws.onerror = () => { try { ws.close(); } catch (e) { /* ignore */ } };
   }

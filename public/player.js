@@ -51,6 +51,7 @@ async function keepAwake() {
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S && S.me) keepAwake(); });
 
 function resendAnswers() {
+  if (screen.resend) return screen.resend();
   if (!screen.key || !screen.key.startsWith('paced')) return;
   Object.keys(localAnswers).forEach((qid) => sock.send({ t: 'answer', qid, value: localAnswers[qid] }));
 }
@@ -67,6 +68,7 @@ function render() {
     if (S.roundState === 'ready') key = 'ready' + S.roundIndex;
     else if (r.mode === 'paced' && S.roundState === 'running') key = 'paced' + S.roundIndex;
     else if (r.mode === 'buzzer' && S.roundState === 'running') key = 'buzz' + S.roundIndex;
+    else if (r.mode === 'stepped' && S.roundState === 'running') key = 'step' + S.roundIndex;
     else key = 'closed' + S.roundIndex + (S.review ? 'r' : '');
   }
   if (key !== screen.key) {
@@ -78,6 +80,7 @@ function render() {
     else if (key.startsWith('ready')) screen = simple(readyHTML);
     else if (key.startsWith('paced')) screen = buildPaced();
     else if (key.startsWith('buzz')) screen = buildBuzz();
+    else if (key.startsWith('step')) screen = buildStepped();
     else screen = simple(closedHTML);
     screen.key = key;
   }
@@ -101,7 +104,7 @@ function readyHTML() {
   const r = S.rounds[S.roundIndex];
   return `${head()}<div class="card center"><div class="small mute">Ronde ${S.roundIndex + 1} van ${S.rounds.length}</div>
     <h2>${esc(r.title)}</h2>
-    <p>${r.mode === 'buzzer' ? 'Buzzerronde: wie het eerst drukt, mag antwoorden.' : `${r.count} vragen · ${r.minutes} minuten`}</p>
+    <p>${r.mode === 'buzzer' ? 'Buzzerronde: wie het eerst drukt, mag antwoorden.' : r.mode === 'stepped' ? `${r.count} vragen, vraag per vraag` : `${r.count} vragen · ${r.minutes} minuten`}</p>
     ${r.intro ? `<p class="mute">${esc(r.intro)}</p>` : ''}
     <p class="hint">Even wachten tot de moderator start…</p></div>${sbCard()}`;
 }
@@ -288,6 +291,96 @@ function buildBuzz() {
       btn.textContent = label;
       $('#bs').textContent = status;
       $('#bsb').innerHTML = S.scoreboard ? `<div class="card"><h2>🏆 Tussenstand</h2>${scoreboardHTML(S.scoreboard, S.me.id)}</div>` : '';
+    }
+  };
+}
+
+/* -------------------------------------------------- vraag per vraag */
+
+function buildStepped() {
+  app.innerHTML = `<div class="wrap">
+    <div class="head"><div class="row"><div class="grow"><div class="small mute" id="sh"></div><div class="small">${esc(S.me.name)}</div></div><div class="timer" id="tm"></div></div></div>
+    <div class="card" id="qc"></div><div id="res"></div><div id="ssb"></div></div>`;
+  const tm = $('#tm');
+  let key = null, curQ = null, myVal, dirty = false, saveTimer = null;
+
+  const sendNow = () => {
+    clearTimeout(saveTimer);
+    if (!curQ || myVal === undefined) return;
+    dirty = false;
+    pending[curQ.id] = true;
+    const sv = $('#sv');
+    if (sv && curQid === curQ.id) sv.textContent = 'Opslaan…';
+    if (!sock.send({ t: 'answer', qid: curQ.id, value: myVal }) && sv) sv.textContent = 'Offline: wordt opnieuw verstuurd.';
+  };
+
+  function card() {
+    const q = curQ, open = !!S.qOpen;
+    curQid = q.id;
+    let h = `<div class="small mute">Vraag ${S.qIndex + 1} / ${S.qCount}${q.points !== 1 ? ` · ${fmtPts(q.points)} punten` : ''}</div><div class="qtext">${esc(q.text)}</div>`;
+    if (q.image) h += `<img class="qimg" src="${esc(q.image)}" alt="">`;
+    if (q.type === 'choice') {
+      h += '<div class="opts">' + q.options.map((o, i) => `<button class="opt ${myVal !== undefined && Number(myVal) === i ? 'sel' : ''}" data-i="${i}" ${open ? '' : 'disabled'}>${esc(o)}</button>`).join('') + '</div>';
+    } else {
+      h += `<input id="inp" type="text" ${q.type === 'number' ? 'inputmode="decimal"' : ''} autocomplete="off" autocapitalize="sentences" placeholder="Jouw antwoord" value="${esc(myVal == null ? '' : myVal)}" ${open ? '' : 'disabled'}>`;
+    }
+    h += `<div class="saved" id="sv">${pending[q.id] ? 'Opslaan…' : myVal !== undefined && myVal !== '' ? '✓ Opgeslagen' : ''}</div>`;
+    $('#qc').innerHTML = h;
+    const inp = $('#inp');
+    if (inp) {
+      inp.addEventListener('input', () => { myVal = inp.value; dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(sendNow, 300); });
+      inp.addEventListener('blur', () => { if (dirty) sendNow(); });
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') inp.blur(); });
+      if (open && !myVal) inp.focus({ preventScroll: true });
+    }
+    $$('.opt', $('#qc')).forEach((b) => b.addEventListener('click', () => {
+      myVal = Number(b.dataset.i);
+      sendNow();
+      card();
+    }));
+  }
+
+  const tick = () => {
+    if (S && S.qOpen && S.endsAt) {
+      const left = S.endsAt - serverNow();
+      tm.textContent = fmtTime(left);
+      tm.classList.toggle('low', left < 10000);
+    } else { tm.textContent = ''; tm.classList.remove('low'); }
+  };
+  const iv = setInterval(tick, 250);
+
+  return {
+    destroy() { clearInterval(iv); clearTimeout(saveTimer); },
+    resend() { if (curQ && S.qOpen && myVal !== undefined) sendNow(); },
+    update() {
+      const q = S.question;
+      $('#sh').textContent = S.rounds[S.roundIndex].title;
+      if (!q) {
+        key = null; curQ = null;
+        $('#qc').innerHTML = '<div class="qtext center">De eerste vraag komt eraan…</div>';
+        $('#res').innerHTML = '';
+        tick();
+        return;
+      }
+      const k = q.id + '|' + !!S.qOpen + '|' + !!S.qRevealed;
+      if (k !== key) {
+        if (dirty) sendNow();
+        if (!curQ || curQ.id !== q.id) { myVal = S.myAnswer; dirty = false; }
+        key = k; curQ = q;
+        card();
+      }
+      let res = '';
+      if (S.qRevealed && S.result) {
+        const r = S.result, good = r.points > 0;
+        res = `<div class="card center"><h2 style="color:${good ? 'var(--ok)' : 'var(--bad)'}">${good ? '✓ Juist!' : '✗ Helaas'} ${fmtPts(r.points)}/${fmtPts(r.max)} pt</h2>
+          <p>Antwoord: <b>${esc(S.revealAnswer)}</b></p>
+          <p class="mute">${r.mine ? 'Jij: ' + esc(r.mine) : 'Je vulde niets in.'}</p></div>`;
+      } else if (!S.qOpen) {
+        res = '<div class="card center"><p><b>⏰ Tijd is om!</b></p><p class="mute">Wacht op het juiste antwoord…</p></div>';
+      }
+      const rh = res + (S.scoreboard ? `<div class="card"><h2>🏆 Tussenstand</h2>${scoreboardHTML(S.scoreboard, S.me.id)}</div>` : '');
+      if ($('#res')._h !== rh) { $('#res')._h = rh; $('#res').innerHTML = rh; }
+      tick();
     }
   };
 }

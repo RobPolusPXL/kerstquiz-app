@@ -30,8 +30,9 @@ function loadQuiz() {
     return {
       id: rid,
       title: r.title || `Ronde ${ri + 1}`,
-      mode: r.mode === 'buzzer' ? 'buzzer' : 'paced',
+      mode: ['buzzer', 'stepped'].includes(r.mode) ? r.mode : 'paced',
       minutes: Number(r.minutes) || 15,
+      seconds: r.seconds === undefined ? 45 : Number(r.seconds) || 0,
       intro: r.intro || '',
       questions: (r.questions || []).map((q, qi) => ({
         id: q.id || `${rid}q${qi + 1}`,
@@ -53,12 +54,14 @@ function loadQuiz() {
 
 /* ------------------------------------------------------------------ state */
 
-const freshBuzz = () => ({ open: false, lockedBy: null, excluded: [], winner: null });
+const freshBuzz = () => ({ open: false, lockedBy: null, excluded: [], winner: null, log: [] });
 const freshState = () => ({
   roundIndex: -1,
   roundState: 'idle', // idle | ready | running | closed
   endsAt: null,
   qIndex: -1,
+  qOpen: false,
+  qRevealed: false,
   buzz: freshBuzz(),
   players: {},
   answers: {},
@@ -147,6 +150,16 @@ function qp(pid, q) {
 }
 const r2 = (n) => Math.round(n * 100) / 100;
 
+function correctText(q) {
+  if (q.type === 'choice') return q.correct !== null && q.options ? q.options[q.correct] : '';
+  return q.answers.slice(0, 3).join(' / ');
+}
+function answerText(q, a) {
+  if (a === undefined || a === null || a === '') return '';
+  if (q.type === 'choice') return (q.options && q.options[Number(a)]) || '';
+  return String(a);
+}
+
 function computeScores() {
   const rows = Object.values(state.players).map((p) => {
     const perRound = quiz.rounds.map((r) => r2(r.questions.reduce((s, q) => s + qp(p.id, q).points, 0)));
@@ -190,6 +203,15 @@ function baseView() {
     names: Object.values(state.players).map((p) => ({ name: p.name, online: isOnline(p.id) })),
     settings: { locked: state.settings.locked, full: Object.keys(state.players).length >= state.settings.maxPlayers }
   };
+  if (r && r.mode === 'stepped' && state.roundState === 'running') {
+    const q = r.questions[state.qIndex];
+    v.qIndex = state.qIndex;
+    v.qCount = r.questions.length;
+    v.question = q ? pubQ(q) : null;
+    v.qOpen = state.qOpen;
+    v.qRevealed = state.qRevealed;
+    if (q && state.qRevealed) v.revealAnswer = correctText(q);
+  }
   if (r && r.mode === 'buzzer' && state.roundState === 'running') {
     const q = r.questions[state.qIndex];
     v.qIndex = state.qIndex;
@@ -219,6 +241,12 @@ function playerView(c) {
       if (a !== undefined) v.myAnswers[q.id] = a;
     });
   }
+  if (r && r.mode === 'stepped' && state.roundState === 'running' && v.question) {
+    const q = r.questions[state.qIndex];
+    const a = (state.answers[me.id] || {})[q.id];
+    if (a !== undefined) v.myAnswer = a;
+    if (state.qRevealed) v.result = { mine: answerText(q, a), points: r2(qp(me.id, q).points), max: q.points };
+  }
   if (r && v.buzz) {
     v.buzz.lockedByMe = state.buzz.lockedBy === me.id;
     v.buzz.excludedMe = state.buzz.excluded.includes(me.id);
@@ -246,6 +274,10 @@ function tvView() {
     const players = Object.values(state.players);
     v.progress = { done: players.filter((p) => answeredAll(p.id, r)).length, total: players.length };
   }
+  if (r && r.mode === 'stepped' && state.roundState === 'running' && v.question) {
+    const players = Object.values(state.players);
+    v.progress = { done: players.filter((p) => { const a = (state.answers[p.id] || {})[v.question.id]; return a !== undefined && String(a).trim() !== ''; }).length, total: players.length };
+  }
   return v;
 }
 
@@ -260,10 +292,13 @@ function adminView() {
     lockedByName: nameOf(state.buzz.lockedBy),
     winner: state.buzz.winner,
     winnerName: nameOf(state.buzz.winner),
+    log: state.buzz.log,
     excluded: state.buzz.excluded,
     excludedNames: state.buzz.excluded.map(nameOf).filter(Boolean)
   };
   v.players = Object.values(state.players).map((p) => ({ id: p.id, name: p.name, online: isOnline(p.id) }));
+  v.rtt = {};
+  for (const c of clients.values()) if (c.pid && c.rtt != null) v.rtt[c.pid] = Math.round(c.rtt);
   v.answers = state.answers;
   v.marks = state.marks;
   v.points = {};
@@ -310,7 +345,43 @@ function armTimer() {
         changed();
       }
     }, ms);
+  } else if (r && r.mode === 'stepped' && state.roundState === 'running' && state.qOpen && state.endsAt) {
+    const ms = Math.max(0, state.endsAt - Date.now()) + 50;
+    roundTimer = setTimeout(() => {
+      if (state.roundState === 'running' && state.qOpen && state.endsAt && Date.now() >= state.endsAt) {
+        state.qOpen = false;
+        changed();
+      }
+    }, ms);
   }
+}
+
+/* buzzer: kort beslissingsvenster, gecorrigeerd voor netwerkvertraging */
+const BUZZ_WINDOW_MS = 100;
+let buzzPending = [];
+let buzzTimer = null;
+function clearBuzzPending() { clearTimeout(buzzTimer); buzzTimer = null; buzzPending = []; }
+function decideBuzz() {
+  const list = buzzPending;
+  buzzPending = [];
+  buzzTimer = null;
+  const b = state.buzz;
+  const r = curRound();
+  if (!list.length || !r || r.mode !== 'buzzer' || state.roundState !== 'running' || !b.open || b.lockedBy) return;
+  list.sort((x, y) => x.est - y.est || x.arrival - y.arrival);
+  const win = list[0];
+  b.lockedBy = win.pid;
+  b.open = false;
+  b.winner = null;
+  b.log = list.map((x) => ({ pid: x.pid, name: nameOf(x.pid), delta: Math.round(x.est - win.est), arrivalDelta: Math.round(x.arrival - win.arrival), rtt: Math.round(x.rtt) }));
+  changed();
+}
+function resetLive() {
+  clearBuzzPending();
+  state.qIndex = -1;
+  state.qOpen = false;
+  state.qRevealed = false;
+  state.buzz = freshBuzz();
 }
 
 /* --------------------------------------------------------------- commands */
@@ -342,18 +413,16 @@ function adminCmd(msg) {
       state.roundIndex = i;
       state.roundState = 'ready';
       state.endsAt = null;
-      state.qIndex = -1;
-      state.buzz = freshBuzz();
+      resetLive();
       break;
     }
     case 'lobby':
-      state.roundIndex = -1; state.roundState = 'idle'; state.endsAt = null; state.qIndex = -1; state.buzz = freshBuzz();
+      state.roundIndex = -1; state.roundState = 'idle'; state.endsAt = null; resetLive();
       break;
     case 'startRound':
       if (r && state.roundState === 'ready') {
         state.roundState = 'running';
-        state.qIndex = -1;
-        state.buzz = freshBuzz();
+        resetLive();
         state.endsAt = r.mode === 'paced' ? Date.now() + r.minutes * 60000 : null;
       }
       break;
@@ -361,6 +430,8 @@ function adminCmd(msg) {
       if (r && (state.roundState === 'running' || state.roundState === 'ready')) {
         state.roundState = 'closed';
         state.buzz.open = false;
+        state.qOpen = false;
+        clearBuzzPending();
       }
       break;
     case 'extend':
@@ -369,7 +440,19 @@ function adminCmd(msg) {
         const base = state.roundState === 'running' && state.endsAt > Date.now() ? state.endsAt : Date.now();
         state.endsAt = base + min * 60000;
         state.roundState = 'running';
+      } else if (r && r.mode === 'stepped' && state.roundState === 'running' && state.qIndex >= 0) {
+        const sec = Number(msg.seconds) || 15;
+        const base = state.endsAt > Date.now() ? state.endsAt : Date.now();
+        state.endsAt = base + sec * 1000;
+        state.qOpen = true;
+        state.qRevealed = false;
       }
+      break;
+    case 'closeQ':
+      if (r && r.mode === 'stepped') state.qOpen = false;
+      break;
+    case 'revealQ':
+      if (r && r.mode === 'stepped' && state.qIndex >= 0) { state.qOpen = false; state.qRevealed = true; }
       break;
     case 'scoreboard':
       state.showScoreboard = !!msg.on;
@@ -380,19 +463,33 @@ function adminCmd(msg) {
     case 'mark':
       setMark(msg.pid, msg.qid, msg.points === null || msg.points === undefined || msg.points === '' ? null : Number(msg.points));
       break;
-    case 'gotoQ':
-      if (r && r.mode === 'buzzer') {
-        const i = Number(msg.index);
-        if (Number.isInteger(i) && i >= 0 && i < r.questions.length) { state.qIndex = i; state.buzz = freshBuzz(); }
+    case 'gotoQ': {
+      const i = Number(msg.index);
+      if (!r || state.roundState !== 'running' || !Number.isInteger(i) || i < 0 || i >= r.questions.length) break;
+      if (r.mode === 'buzzer') {
+        clearBuzzPending();
+        state.qIndex = i;
+        state.buzz = freshBuzz();
+      } else if (r.mode === 'stepped') {
+        state.qIndex = i;
+        state.qOpen = true;
+        state.qRevealed = false;
+        state.endsAt = r.seconds > 0 ? Date.now() + r.seconds * 1000 : null;
       }
       break;
+    }
     case 'openBuzzer':
-      if (cur && state.roundState === 'running') { state.buzz.open = true; state.buzz.lockedBy = null; state.buzz.winner = null; }
+      if (cur && state.roundState === 'running') {
+        clearBuzzPending();
+        state.buzz.open = true; state.buzz.lockedBy = null; state.buzz.winner = null; state.buzz.log = [];
+      }
       break;
     case 'closeBuzzer':
+      clearBuzzPending();
       state.buzz.open = false;
       break;
     case 'resetBuzz':
+      clearBuzzPending();
       state.buzz = freshBuzz();
       break;
     case 'correct':
@@ -407,6 +504,7 @@ function adminCmd(msg) {
       if (cur && state.buzz.lockedBy) {
         state.buzz.excluded.push(state.buzz.lockedBy);
         state.buzz.lockedBy = null;
+        state.buzz.log = [];
         state.buzz.open = true;
       }
       break;
@@ -432,11 +530,12 @@ function adminCmd(msg) {
       break;
     case 'reset':
       if (msg.what === 'all') {
+        clearBuzzPending();
         state = Object.assign(freshState(), { adminTokens: state.adminTokens });
         for (const c of clients.values()) if (!c.admin) c.pid = null;
       } else {
-        state.roundIndex = -1; state.roundState = 'idle'; state.endsAt = null; state.qIndex = -1;
-        state.buzz = freshBuzz(); state.answers = {}; state.marks = {}; state.reveal = {}; state.showScoreboard = false;
+        state.roundIndex = -1; state.roundState = 'idle'; state.endsAt = null; resetLive();
+        state.answers = {}; state.marks = {}; state.reveal = {}; state.showScoreboard = false;
       }
       break;
     default:
@@ -479,8 +578,13 @@ function onMessage(ws, c, msg) {
     case 'answer': {
       const p = c.pid && state.players[c.pid];
       const r = curRound();
-      if (!p || !r || r.mode !== 'paced' || state.roundState !== 'running') return send(ws, { t: 'nack', qid: msg.qid, reason: 'closed' });
-      if (state.endsAt && Date.now() > state.endsAt + GRACE_MS) return send(ws, { t: 'nack', qid: msg.qid, reason: 'closed' });
+      const closed = () => send(ws, { t: 'nack', qid: msg.qid, reason: 'closed' });
+      if (!p || !r || r.mode === 'buzzer' || state.roundState !== 'running') return closed();
+      if (state.endsAt && Date.now() > state.endsAt + GRACE_MS) return closed();
+      if (r.mode === 'stepped') {
+        const cq = r.questions[state.qIndex];
+        if (!state.qOpen || !cq || cq.id !== msg.qid) return closed();
+      }
       const q = r.questions.find((x) => x.id === msg.qid);
       if (!q) return;
       let val = msg.value;
@@ -503,10 +607,19 @@ function onMessage(ws, c, msg) {
       if (!p || !r || r.mode !== 'buzzer' || state.roundState !== 'running') return;
       const b = state.buzz;
       if (!b.open || b.lockedBy || b.excluded.includes(p.id)) return;
-      b.lockedBy = p.id;
-      b.open = false;
-      b.winner = null;
-      changed();
+      if (buzzPending.some((x) => x.pid === p.id)) return;
+      const arrival = Date.now();
+      const rtt = c.rtt || 0;
+      buzzPending.push({ pid: p.id, arrival, rtt, est: arrival - rtt / 2 });
+      if (!buzzTimer) buzzTimer = setTimeout(decideBuzz, BUZZ_WINDOW_MS);
+      break;
+    }
+
+    case 'sa': {
+      const t = Number(msg.i);
+      const rtt = Date.now() - t;
+      if (!t || rtt < 0 || rtt > 5000) return;
+      c.rtt = c.rtt == null ? rtt : c.rtt * 0.6 + rtt * 0.4;
       break;
     }
 
@@ -587,6 +700,19 @@ wss.on('connection', (ws) => {
   ws.on('error', () => {});
   send(ws, viewFor(c));
 });
+
+// Latency-meting: snel tijdens de buzzerronde (houdt ook de wifi-radio van gsm's wakker), anders elke 2s.
+let pingTick = 0;
+setInterval(() => {
+  pingTick++;
+  const r = curRound();
+  const fast = r && r.mode === 'buzzer' && state.roundState === 'running';
+  const slowTurn = pingTick % 10 === 0;
+  if (!fast && !slowTurn) return;
+  const now = Date.now();
+  for (const [ws, c] of clients) if (c.pid && ws.readyState === 1) ws.send(`{"t":"sp","i":${now}}`);
+  if (slowTurn) for (const [ws, c] of clients) if (c.admin) send(ws, adminView());
+}, 200);
 
 setInterval(() => {
   for (const ws of wss.clients) {

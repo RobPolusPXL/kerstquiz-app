@@ -19,7 +19,8 @@ Op één wifi spelen: spelers openen `http://<ip-van-je-laptop>:3000`.
 ## Vragen
 
 Alles staat in `questions.json` (3 rondes). Pas aan en klik in `/admin` op "Vragen herladen".
-Vraagtypes: `choice`, `text`, `number`. Rondemodi: `paced` (eigen tempo, timer) en `buzzer` (live).
+Vraagtypes: `choice`, `text`, `number`. Rondemodi: `stepped` (vraag per vraag, jij start elke vraag, `seconds` = timer per vraag),
+`buzzer` (live) en `paced` (alle vragen tegelijk op eigen tempo binnen `minutes`).
 Afbeeldingen: zet ze in `public/media/` en verwijs met `"image": "/media/foto.jpg"`.
 Geef vragen een vaste `id` als je ze nog herordent nadat het spel gestart is.
 

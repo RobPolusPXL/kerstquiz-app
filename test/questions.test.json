@@ -1,0 +1,19 @@
+{
+  "title": "Test",
+  "rounds": [
+    { "id": "t1", "title": "Paced", "mode": "paced", "minutes": 15, "questions": [
+      { "type": "text", "text": "Land van de meren?", "answers": ["Ierland"] },
+      { "type": "number", "text": "Getal?", "answers": ["50"] },
+      { "type": "text", "text": "Hoofdstad Kiribati?", "answers": ["Tarawa"] },
+      { "type": "choice", "text": "Euro niet?", "options": ["a", "b", "c"], "correct": 1 }
+    ] },
+    { "id": "t2", "title": "Stepped", "mode": "stepped", "seconds": 1, "questions": [
+      { "type": "text", "text": "Hoofdstad Australië?", "answers": ["Canberra"] },
+      { "type": "choice", "text": "Spin poten?", "options": ["6", "8", "10"], "correct": 1 }
+    ] },
+    { "id": "t3", "title": "Buzzer", "mode": "buzzer", "questions": [
+      { "type": "text", "text": "Wie schilderde De Nachtwacht?", "answers": ["Rembrandt"] },
+      { "type": "text", "text": "Symbool goud?", "answers": ["Au"] }
+    ] }
+  ]
+}

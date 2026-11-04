@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function startServer() {
   return new Promise((resolve) => {
-    server = spawn('node', [path.join(__dirname, '..', 'server.js')], { env: { ...process.env, PORT, DATA_DIR, ADMIN_PASSWORD: PW } });
+    server = spawn('node', [path.join(__dirname, '..', 'server.js')], { env: { ...process.env, PORT, DATA_DIR, ADMIN_PASSWORD: PW, QUESTIONS_FILE: path.join(__dirname, 'questions.test.json') } });
     server.stdout.on('data', (d) => { if (String(d).includes('draait op')) resolve(); });
     server.stderr.on('data', (d) => process.stderr.write(d));
   });
@@ -28,6 +28,7 @@ function client() {
   const c = { ws, last: null, msgs: [], waiters: [] };
   ws.on('message', (d) => {
     const m = JSON.parse(d);
+    if (m.t === 'sp') { const reply = () => ws.readyState === 1 && ws.send(JSON.stringify({ t: 'sa', i: m.i })); return c.spDelay ? setTimeout(reply, c.spDelay) : reply(); }
     c.msgs.push(m);
     if (m.t === 'state' || m.t === 'admin') c.last = m;
     c.waiters = c.waiters.filter((w) => { if (w.pred(m)) { w.res(m); return false; } return true; });
@@ -91,7 +92,7 @@ async function player(name, token) {
   await an.state((s) => s.roundState === 'ready');
   ok(an.last.roundState === 'ready', 'ronde klaargezet, speler ziet "ready"');
   cmd({ cmd: 'startRound' });
-  await an.state((s) => s.questions && s.questions.length === 11);
+  await an.state((s) => s.questions && s.questions.length === 4);
   const qjson = JSON.stringify(an.last.questions);
   ok(!/"correct"|"answers"|"note"/.test(qjson), 'juiste antwoorden lekken niet naar spelers');
   ok(an.last.endsAt > Date.now() + 14 * 60000 - 2000, 'timer staat op ~15 minuten');
@@ -104,13 +105,13 @@ async function player(name, token) {
   bo.send({ t: 'answer', qid: q[0].id, value: 'Frankrijk' });               // fout
   bo.send({ t: 'answer', qid: q[3].id, value: 0 });                         // fout
   bo.send({ t: 'answer', qid: q[3].id, value: 99 });                        // ongeldig, genegeerd
-  cy.send({ t: 'answer', qid: q[8].id, value: '22 maart 2016' });           // juist
+  cy.send({ t: 'answer', qid: q[1].id, value: '50' });                      // juist
   await sleep(200);
   const a1 = await admin.state((s) => s.fullScores.length === 3);
   const sc = Object.fromEntries(a1.fullScores.map((x) => [x.name, x.total]));
   ok(sc.An === 4, `An heeft 4 punten (auto + fuzzy) -> ${sc.An}`);
   ok(sc.Bo === 0, `Bo heeft 0 punten -> ${sc.Bo}`);
-  ok(sc.Cy === 1, `Cy heeft 1 punt (datum) -> ${sc.Cy}`);
+  ok(sc.Cy === 1, `Cy heeft 1 punt -> ${sc.Cy}`);
 
   // --- scorebord is verborgen voor spelers tot de moderator het toont
   ok(an.last.scoreboard === null, 'scorebord verborgen voor spelers');
@@ -137,12 +138,44 @@ async function player(name, token) {
   // --- tijd is om
   cmd({ cmd: 'closeRound' });
   await an2.state((s) => s.roundState === 'closed');
-  an2.send({ t: 'answer', qid: q[4].id, value: 'x' });
+  an2.send({ t: 'answer', qid: q[2].id, value: 'x' });
   const nack = await an2.wait((m) => m.t === 'nack');
   ok(nack.reason === 'closed', 'antwoord na sluiting wordt geweigerd');
-  cmd({ cmd: 'reveal', roundId: 'r1', on: true });
+  cmd({ cmd: 'reveal', roundId: 't1', on: true });
   const rv = await an2.state((s) => s.review);
-  ok(rv.review.length === 11 && rv.review[0].points === 1, 'speler ziet review na "antwoorden tonen"');
+  ok(rv.review.length === 4 && rv.review[0].points === 1, 'speler ziet review na "antwoorden tonen"');
+
+  // --- ronde 2 (vraag per vraag)
+  cmd({ cmd: 'selectRound', index: 1 });
+  cmd({ cmd: 'startRound' });
+  await an2.state((s) => s.roundState === 'running' && s.roundIndex === 1);
+  ok(an2.last.question === null, 'stepped: nog geen vraag zichtbaar voor de start');
+  an2.send({ t: 'answer', qid: 't2q1', value: 'Canberra' });
+  const nack0 = await an2.wait((m) => m.t === 'nack');
+  ok(nack0.reason === 'closed', 'stepped: antwoord vóór de vraag opent wordt geweigerd');
+  cmd({ cmd: 'gotoQ', index: 0 });
+  const sq = await an2.state((s) => s.question && s.qOpen);
+  ok(sq.question.text.includes('Australië') && !JSON.stringify(sq).includes('Canberra'), 'stepped: vraag zichtbaar, antwoord niet gelekt');
+  ok(sq.endsAt - Date.now() <= 1500, 'stepped: timer per vraag (1 s in test)');
+  an2.send({ t: 'answer', qid: sq.question.id, value: 'canberra' });
+  bo.send({ t: 'answer', qid: sq.question.id, value: 'Sydney' });
+  bo.send({ t: 'answer', qid: 't2q2', value: 1 });
+  await an2.state((s) => !s.qOpen, 4000);
+  ok(true, 'stepped: vraag sluit automatisch na de timer');
+  an2.send({ t: 'answer', qid: sq.question.id, value: 'te laat' });
+  const nack1 = await an2.wait((m) => m.t === 'nack');
+  ok(nack1.reason === 'closed', 'stepped: te laat antwoord wordt geweigerd');
+  ok(!an2.last.revealAnswer, 'stepped: antwoord pas zichtbaar na "Toon antwoord"');
+  cmd({ cmd: 'revealQ' });
+  const rev1 = await an2.state((s) => s.qRevealed && s.result);
+  ok(rev1.result.points === 1 && rev1.revealAnswer === 'Canberra', 'stepped: speler ziet antwoord en eigen punt na reveal');
+  const rev2 = await bo.state((s) => s.qRevealed && s.result);
+  ok(rev2.result.points === 0, 'stepped: foute speler krijgt 0');
+  cmd({ cmd: 'extend', seconds: 5 });
+  await an2.state((s) => s.qOpen && !s.qRevealed);
+  ok(true, 'stepped: moderator kan de vraag heropenen (+tijd)');
+  cmd({ cmd: 'closeQ' });
+  await an2.state((s) => !s.qOpen);
 
   // --- ronde 3 (buzzer)
   cmd({ cmd: 'selectRound', index: 2 });
@@ -175,6 +208,21 @@ async function player(name, token) {
   await admin.state((s) => s.buzz.winner === winner);
   const pts = admin.last.fullScores.find((x) => x.id === winner).perRound[2];
   ok(pts === 1, `juist antwoord geeft punt aan winnaar (ronde 3 = ${pts})`);
+
+  // --- eerlijke buzzer: trage verbinding (hoge ping) die eerder drukt wint van snelle die later drukt
+  cmd({ cmd: 'gotoQ', index: 1 });
+  await an2.state((s) => s.qIndex === 1);
+  an2.spDelay = 160;
+  await sleep(2400);
+  const rtt = admin.last.rtt && admin.last.rtt[an2.joined.id];
+  ok(rtt >= 100, `server meet de ping van de trage speler (${rtt} ms)`);
+  cmd({ cmd: 'openBuzzer' });
+  await an2.state((s) => s.buzz.open);
+  setTimeout(() => an2.send({ t: 'buzz' }), 80);   // echte druk op t=0, komt 80 ms later aan
+  setTimeout(() => bo.send({ t: 'buzz' }), 40);    // echte druk op t=40, komt meteen aan
+  const lk = await admin.state((s) => s.buzz.lockedBy);
+  ok(lk.buzz.lockedBy === an2.joined.id, `latency-compensatie: trage maar eerdere buzz wint (${JSON.stringify(lk.buzz.log)})`);
+  ok(lk.buzz.log.length === 2 && lk.buzz.log[0].delta === 0, 'moderator ziet de buzzvolgorde met verschillen');
 
   // --- persistentie over herstart
   await sleep(400);

@@ -137,9 +137,40 @@ function ctlHTML() {
         <div class="row wrap-r"><button data-cmd="extend" data-n-minutes="2">⏱ Hervat (+2 min)</button>
         <button class="${rev ? 'gold' : ''}" data-cmd="reveal" data-round-id="${esc(r.id)}" data-b-on="${!rev}">👁 Antwoorden ${rev ? 'verbergen' : 'tonen aan spelers'}</button></div>`;
     }
+  } else if (r.mode === 'stepped') {
+    h += steppedHTML(r, st);
   } else {
     h += buzzerHTML(r, st);
   }
+  return h;
+}
+
+function steppedHTML(r, st) {
+  if (st === 'closed') return '<p class="mute">Ronde afgelopen.</p>';
+  const q = r.questions[S.qIndex];
+  let h = '<div class="row wrap-r" style="margin-bottom:10px">' +
+    r.questions.map((x, i) => `<button class="sm ${i === S.qIndex ? 'gold' : ''}" data-cmd="gotoQ" data-n-index="${i}">${i + 1}</button>`).join('') + '</div>';
+  if (!q) {
+    return h + `<button class="primary" data-cmd="gotoQ" data-n-index="0" style="font-size:1.2rem;padding:14px 28px">▶ Start vraag 1</button>
+      <button class="bad" data-cmd="closeRound" data-confirm="Ronde stoppen?">⏹ Stop ronde</button>`;
+  }
+  const done = S.players.filter((p) => answered(p.id, q)).length;
+  const status = S.qRevealed ? '👁 Antwoord getoond' : S.qOpen ? '🟢 Vraag open' : '🔴 Vraag gesloten';
+  const last = S.qIndex + 1 >= r.questions.length;
+  h += `<div class="card" style="background:var(--card2)">
+    <div class="small mute">Vraag ${S.qIndex + 1} / ${r.questions.length} · ${fmtPts(q.points)} pt</div>
+    <div class="bq">${esc(q.text)}</div>
+    ${q.image ? `<img class="qimg" style="max-height:200px" src="${esc(q.image)}" alt="">` : ''}
+    <div class="hint" style="margin-top:6px">Antwoord: <b>${esc(correctText(q))}</b></div>
+    ${q.note ? `<div class="small mute">${esc(q.note)}</div>` : ''}
+    <div class="row wrap-r" style="margin-top:10px;font-size:1.1rem;font-weight:700"><span>${status}</span>${S.qOpen && S.endsAt ? '<span class="timer" id="adTimer"></span>' : ''}<span class="mute small">${done} van ${S.players.length} hebben geantwoord</span></div></div>
+    <div class="row wrap-r">
+      <button data-cmd="closeQ" ${S.qOpen ? '' : 'disabled'}>⏹ Sluit vraag</button>
+      <button data-cmd="extend" data-n-seconds="15">+15 s</button>
+      <button class="gold" data-cmd="revealQ" ${S.qRevealed ? 'disabled' : ''}>👁 Toon antwoord</button>
+      <button class="primary" data-cmd="gotoQ" data-n-index="${S.qIndex + 1}" ${last ? 'disabled' : ''}>Volgende vraag ▶</button>
+      <button class="bad" data-cmd="closeRound" data-confirm="Ronde stoppen?">⏹ Stop ronde</button>
+    </div>`;
   return h;
 }
 
@@ -158,6 +189,9 @@ function buzzerHTML(r, st) {
   else if (b.winnerName) status = `✔ Juist: ${esc(b.winnerName)} (+${fmtPts(q.points)})`;
   else status = '🔴 Buzzer is dicht';
   if (b.excludedNames.length) status += ` <span class="mute small">(fout: ${b.excludedNames.map(esc).join(', ')})</span>`;
+  if (b.log && b.log.length) {
+    status += `<div class="small mute" style="font-weight:400;margin-top:4px">Volgorde: ${b.log.map((x) => `${esc(x.name)} ${x.delta === 0 ? '(eerst)' : '+' + x.delta + ' ms'} · ping ${x.rtt} ms`).join(' | ')}</div>`;
+  }
 
   h += `<div class="card" style="background:var(--card2)">
     <div class="small mute">Vraag ${S.qIndex + 1} / ${r.questions.length} · ${fmtPts(q.points)} pt</div>
@@ -182,11 +216,13 @@ function playersHTML() {
   const r = curRound();
   let h = `<h2>Spelers (${S.players.length}/${S.settings.maxPlayers})</h2>`;
   if (!S.players.length) return h + '<p class="mute">Nog niemand binnen.</p>';
-  h += '<table><tr><th>Naam</th><th class="num">Ingevuld</th><th class="num">Punten</th><th></th></tr>';
+  h += '<table><tr><th>Naam</th><th class="num">Ingevuld</th><th class="num">Ping</th><th class="num">Punten</th><th></th></tr>';
   const total = {}; S.fullScores.forEach((s) => { total[s.id] = s.total; });
   S.players.forEach((p) => {
     const prog = r && r.mode === 'paced' ? `${r.questions.filter((q) => answered(p.id, q)).length}/${r.questions.length}` : '–';
-    h += `<tr><td><span class="dot ${p.online ? 'on' : ''}"></span>${esc(p.name)}</td><td class="num">${prog}</td><td class="num">${fmtPts(total[p.id] || 0)}</td>
+    const rtt = S.rtt && S.rtt[p.id];
+    const ping = p.online && rtt != null ? `<span style="color:${rtt > 150 ? 'var(--bad)' : 'var(--mute)'}">${rtt} ms</span>` : '–';
+    h += `<tr><td><span class="dot ${p.online ? 'on' : ''}"></span>${esc(p.name)}</td><td class="num">${prog}</td><td class="num">${ping}</td><td class="num">${fmtPts(total[p.id] || 0)}</td>
       <td class="num"><button class="sm ghost" data-cmd="kick" data-pid="${p.id}" data-confirm="${esc(p.name)} verwijderen (incl. antwoorden)?">✕</button></td></tr>`;
   });
   h += '</table>';
@@ -224,8 +260,8 @@ function renderAnswers() {
       const txt = answerText(q, a);
       if (r.mode === 'buzzer' && pt.source !== 'manual') return;
       if (onlyReview && !(q.type !== 'choice' && txt && pt.source === 'auto' && pt.points === 0)) return;
-      const cls = !txt && r.mode === 'paced' ? 'empty' : pt.points > 0 ? 'good' : 'wrong';
-      rows.push(`<div class="ans ${cls}"><span class="who">${esc(p.name)}</span><span class="val">${txt ? esc(txt) : r.mode === 'paced' ? 'geen antwoord' : ''}</span>
+      const cls = !txt && r.mode !== 'buzzer' ? 'empty' : pt.points > 0 ? 'good' : 'wrong';
+      rows.push(`<div class="ans ${cls}"><span class="who">${esc(p.name)}</span><span class="val">${txt ? esc(txt) : r.mode !== 'buzzer' ? 'geen antwoord' : ''}</span>
         <span class="pts">${fmtPts(pt.points)}${pt.source === 'manual' ? '<span class="man"> ✎</span>' : ''}</span>
         <button class="sm ok" data-cmd="mark" data-pid="${p.id}" data-qid="${q.id}" data-n-points="${q.points}">✓</button>
         <button class="sm bad" data-cmd="mark" data-pid="${p.id}" data-qid="${q.id}" data-n-points="0">✗</button>
@@ -245,6 +281,7 @@ function tick() {
   if (!el || !S || !S.endsAt) return;
   const left = S.endsAt - serverNow();
   el.textContent = fmtTime(left);
-  el.classList.toggle('low', left < 60000);
+  const r = curRound();
+  el.classList.toggle('low', left < (r && r.mode === 'stepped' ? 10000 : 60000));
 }
 setInterval(tick, 250);

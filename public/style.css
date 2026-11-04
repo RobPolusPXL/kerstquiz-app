@@ -139,3 +139,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .tv .sbtv { width: min(90vw, 1000px); }
 .tv .sbtv li { font-size: 2.8vw; padding: 1.2vw 2vw; }
 .tv img { max-height: 35vh; border-radius: 1vw; }
+
+input:disabled { opacity: .6; }
+.opt:disabled { opacity: .7; }
+.opt.sel:disabled { opacity: 1; }
