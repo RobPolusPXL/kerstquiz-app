@@ -223,7 +223,7 @@ async function player(name, token) {
   cmd({ cmd: 'gotoQ', index: 1 });
   await an2.state((s) => s.qIndex === 1);
   an2.spDelay = 160;
-  await sleep(3500);
+  await sleep(4700);
   const rtt = admin.last.rtt && admin.last.rtt[an2.joined.id];
   ok(rtt >= 100, `server meet de ping van de trage speler (${rtt} ms)`);
   cmd({ cmd: 'openBuzzer' });
