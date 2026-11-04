@@ -188,6 +188,12 @@ async function player(name, token) {
   ok(!an2.last.buzz.lockedByName, 'buzz bij gesloten buzzer telt niet');
   cmd({ cmd: 'openBuzzer' });
   await an2.state((s) => s.buzz.open);
+  const early = await an2.state((s) => s.buzz.open);
+  ok(early.buzz.openAt > Date.now() + 800, 'buzzer opent op een gepland tijdstip (~1,5 s later)');
+  bo.send({ t: 'buzz' });
+  await sleep(250);
+  ok(!admin.last.buzz.lockedBy, 'te vroeg buzzen (voor het openingstijdstip) telt niet');
+  await sleep(Math.max(0, early.buzz.openAt - Date.now()) + 80);
   // drie spelers tegelijk
   an2.send({ t: 'buzz' }); bo.send({ t: 'buzz' }); cy.send({ t: 'buzz' });
   const locked = await admin.state((s) => s.buzz.lockedBy);
@@ -197,6 +203,7 @@ async function player(name, token) {
   ok(admin.last.buzz.lockedBy === first && !admin.last.buzz.open, 'buzzer vergrendelt na eerste buzz');
   cmd({ cmd: 'wrong' });
   await admin.state((s) => s.buzz.open && s.buzz.excluded.length === 1);
+  await sleep(1700); // heropening is ook gepland
   ok(true, 'fout antwoord: buzzer heropent, speler uitgesloten');
   first === an2.joined.id ? an2.send({ t: 'buzz' }) : null;
   const others = [an2, bo, cy].filter((c) => c.joined.id !== first);
@@ -218,6 +225,7 @@ async function player(name, token) {
   ok(rtt >= 100, `server meet de ping van de trage speler (${rtt} ms)`);
   cmd({ cmd: 'openBuzzer' });
   await an2.state((s) => s.buzz.open);
+  await sleep(1700); // wacht tot de buzzer echt open is (gepland tijdstip)
   setTimeout(() => an2.send({ t: 'buzz' }), 80);   // echte druk op t=0, komt 80 ms later aan
   setTimeout(() => bo.send({ t: 'buzz' }), 40);    // echte druk op t=40, komt meteen aan
   const lk = await admin.state((s) => s.buzz.lockedBy);

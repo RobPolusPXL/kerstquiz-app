@@ -11,6 +11,8 @@ const STATE_FILE = path.join(DATA_DIR, 'state.json');
 const QUESTIONS_FILE = process.env.QUESTIONS_FILE || path.join(__dirname, 'questions.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const GRACE_MS = 1500;
+// De buzzer opent op alle gsm's op hetzelfde geplande tijdstip (nu + lead), zodat netwerkvertraging niemand benadeelt.
+const BUZZ_LEAD_MS = Number(process.env.BUZZ_LEAD_MS) || 1500;
 
 let ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_PASSWORD) {
@@ -54,7 +56,7 @@ function loadQuiz() {
 
 /* ------------------------------------------------------------------ state */
 
-const freshBuzz = () => ({ open: false, lockedBy: null, excluded: [], winner: null, log: [] });
+const freshBuzz = () => ({ open: false, openAt: 0, lockedBy: null, excluded: [], winner: null, log: [] });
 const freshState = () => ({
   roundIndex: -1,
   roundState: 'idle', // idle | ready | running | closed
@@ -219,6 +221,7 @@ function baseView() {
     v.question = q ? pubQ(q) : null;
     v.buzz = {
       open: state.buzz.open,
+      openAt: state.buzz.openAt,
       lockedByName: nameOf(state.buzz.lockedBy),
       winnerName: nameOf(state.buzz.winner),
       excludedNames: state.buzz.excluded.map(nameOf).filter(Boolean)
@@ -288,6 +291,7 @@ function adminView() {
   v.qIndex = state.qIndex;
   v.buzz = {
     open: state.buzz.open,
+    openAt: state.buzz.openAt,
     lockedBy: state.buzz.lockedBy,
     lockedByName: nameOf(state.buzz.lockedBy),
     winner: state.buzz.winner,
@@ -481,7 +485,7 @@ function adminCmd(msg) {
     case 'openBuzzer':
       if (cur && state.roundState === 'running') {
         clearBuzzPending();
-        state.buzz.open = true; state.buzz.lockedBy = null; state.buzz.winner = null; state.buzz.log = [];
+        state.buzz.open = true; state.buzz.openAt = Date.now() + BUZZ_LEAD_MS; state.buzz.lockedBy = null; state.buzz.winner = null; state.buzz.log = [];
       }
       break;
     case 'closeBuzzer':
@@ -506,6 +510,7 @@ function adminCmd(msg) {
         state.buzz.lockedBy = null;
         state.buzz.log = [];
         state.buzz.open = true;
+        state.buzz.openAt = Date.now() + BUZZ_LEAD_MS;
       }
       break;
     case 'addPlayer': {
@@ -610,7 +615,9 @@ function onMessage(ws, c, msg) {
       if (buzzPending.some((x) => x.pid === p.id)) return;
       const arrival = Date.now();
       const rtt = c.rtt || 0;
-      buzzPending.push({ pid: p.id, arrival, rtt, est: arrival - rtt / 2 });
+      const est = arrival - rtt / 2;
+      if (b.openAt && est < b.openAt - 40) return; // te vroeg gedrukt (voor het geplande openingstijdstip): telt niet, kost niets
+      buzzPending.push({ pid: p.id, arrival, rtt, est });
       if (!buzzTimer) buzzTimer = setTimeout(decideBuzz, BUZZ_WINDOW_MS);
       break;
     }
@@ -710,7 +717,7 @@ setInterval(() => {
   const slowTurn = pingTick % 10 === 0;
   if (!fast && !slowTurn) return;
   const now = Date.now();
-  for (const [ws, c] of clients) if (c.pid && ws.readyState === 1) ws.send(`{"t":"sp","i":${now}}`);
+  for (const [ws, c] of clients) if (c.pid && ws.readyState === 1) ws.send(JSON.stringify({ t: 'sp', i: now, r: c.rtt == null ? undefined : Math.round(c.rtt) }));
   if (slowTurn) for (const [ws, c] of clients) if (c.admin) send(ws, adminView());
 }, 200);
 

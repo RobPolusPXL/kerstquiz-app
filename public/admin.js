@@ -185,7 +185,7 @@ function buzzerHTML(r, st) {
   const mark = b.winner ? (S.points[b.winner] || {})[q.id] : null;
   let status;
   if (b.lockedByName) status = `<span class="hint">🔔 ${esc(b.lockedByName)} heeft gebuzzed!</span>`;
-  else if (b.open) status = '🟢 Buzzer is open';
+  else if (b.open) status = b.openAt && serverNow() < b.openAt ? '🟡 Buzzer opent zo…' : '🟢 Buzzer is open';
   else if (b.winnerName) status = `✔ Juist: ${esc(b.winnerName)} (+${fmtPts(q.points)})`;
   else status = '🔴 Buzzer is dicht';
   if (b.excludedNames.length) status += ` <span class="mute small">(fout: ${b.excludedNames.map(esc).join(', ')})</span>`;

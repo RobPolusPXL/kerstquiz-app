@@ -24,6 +24,10 @@ Vraagtypes: `choice`, `text`, `number`. Rondemodi: `stepped` (vraag per vraag, j
 Afbeeldingen: zet ze in `public/media/` en verwijs met `"image": "/media/foto.jpg"`.
 Geef vragen een vaste `id` als je ze nog herordent nadat het spel gestart is.
 
+## Buzzer
+
+Bij "Open buzzer" plant de server het openingstijdstip 1,5 s later (`BUZZ_LEAD_MS` om dat te wijzigen). Alle gsm's tonen "KLAAR…" en gaan op exact dat moment samen open; drukken vóór die tijd telt niet.
+
 ## Hosten
 
 Draait overal waar Node 18+ draait (bv. Render/Fly/Railway). Start command: `npm start`,

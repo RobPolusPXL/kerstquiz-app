@@ -257,7 +257,7 @@ function buildBuzz() {
     <div class="card"><div class="small mute" id="bh"></div><div class="qtext" id="bq"></div><img id="bi" class="qimg" hidden alt=""></div>
     <div class="buzzwrap"><button class="buzz" id="bz"></button><div class="bigstatus" id="bs"></div></div>
     <div id="bsb" style="margin-top:18px"></div></div>`;
-  let active = false;
+  let active = false, waitT = null;
   const press = () => {
     if (!active) return;
     sock.send({ t: 'buzz' });
@@ -270,8 +270,9 @@ function buildBuzz() {
   $('#bz').addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); press(); } });
 
   return {
-    destroy() {},
+    destroy() { clearTimeout(waitT); },
     update() {
+      clearTimeout(waitT);
       const b = S.buzz, q = S.question;
       $('#bh').textContent = q ? `Vraag ${S.qIndex + 1} / ${S.qCount}` : S.rounds[S.roundIndex].title;
       $('#bq').textContent = q ? q.text : 'De eerste vraag komt eraan…';
@@ -283,6 +284,10 @@ function buildBuzz() {
       else if (b.lockedByMe) { cls += ' me'; label = 'JIJ!'; status = 'Jij was eerst! Geef je antwoord.'; }
       else if (b.lockedByName) { cls += ' other'; label = '🔒'; status = `${b.lockedByName} was eerst`; }
       else if (b.open && b.excludedMe) { label = '✋'; status = 'Fout, de anderen mogen nu.'; }
+      else if (b.open && b.openAt && serverNow() < b.openAt) {
+        cls += ' wait'; label = 'KLAAR…'; status = 'Maak je klaar';
+        waitT = setTimeout(() => { if (screen.key && screen.key.startsWith('buzz')) screen.update(); }, Math.max(0, b.openAt - serverNow()));
+      }
       else if (b.open) { cls += ' live'; label = 'BUZZ!'; status = ''; active = true; }
       else if (b.winnerName) { cls += b.winnerMe ? ' me' : ''; label = b.winnerMe ? '🎉' : '✔'; status = b.winnerMe ? 'Juist! Punt voor jou!' : `Juist! Punt voor ${b.winnerName}`; }
       else { label = '⏳'; status = 'Wacht tot de buzzer opent'; }

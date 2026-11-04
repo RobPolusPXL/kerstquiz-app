@@ -10,6 +10,7 @@ const sock = createSocket((m) => {
 });
 
 let last = '';
+let tvWait = null;
 function set(html) { if (html !== last) { last = html; root.innerHTML = html; } tick(); }
 
 function render() {
@@ -54,6 +55,10 @@ function render() {
     if (!q) return set(`<div class="sub">${esc(r.title)}</div><h1>Zet je schrap…</h1>`);
     let status;
     if (b.lockedByName) status = `<div class="sub">Eerst gebuzzed:</div><div class="who">${esc(b.lockedByName)}</div>`;
+    else if (b.open && b.openAt && serverNow() < b.openAt) {
+      status = '<div class="who" style="color:var(--gold)">Klaar…</div>';
+      clearTimeout(tvWait); tvWait = setTimeout(render, Math.max(0, b.openAt - serverNow()) + 10);
+    }
     else if (b.open) status = '<div class="who" style="color:var(--gold)">🔔 BUZZ!</div>';
     else if (b.winnerName) status = `<div class="who">✔ ${esc(b.winnerName)}</div>`;
     else status = '<div class="sub">Even luisteren…</div>';
