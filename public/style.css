@@ -195,3 +195,21 @@ body:not(:has(.admin))::after {
 .sb li:nth-child(1) { background: linear-gradient(90deg, rgba(242,193,78,.22), var(--card2) 60%); }
 .buzz.live { box-shadow: 0 10px 0 var(--red-d), 0 0 60px rgba(224,70,58,.55), 0 20px 30px rgba(0,0,0,.4); }
 .tv .big { text-shadow: 0 0 40px rgba(245,200,76,.35); }
+
+/* tv: timerring + podium */
+.ring { position: relative; width: 17vw; height: 17vw; }
+.ring svg { width: 100%; height: 100%; }
+.ring circle { fill: none; stroke-width: 9; }
+.ring .rbg { stroke: rgba(255,255,255,.12); }
+.ring .rfg { stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset .25s linear; }
+.ring .rfg.low { stroke: var(--bad); }
+.ring .rtxt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6.5vw; font-weight: 900; color: var(--gold); font-variant-numeric: tabular-nums; }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 1.6vw; width: min(90vw, 1000px); }
+.pcol { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.pname { font-size: 2.8vw; font-weight: 800; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ppts { font-size: 2vw; color: var(--mute); margin-bottom: .8vw; font-variant-numeric: tabular-nums; }
+.pbar { width: 100%; border-radius: 1.2vw 1.2vw 0 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 1vw; font-size: 4vw; font-weight: 900; color: #3b2a00; }
+.p1 .pbar { height: 19vh; background: linear-gradient(180deg,#ffe08a,#f2c14e); }
+.p2 .pbar { height: 15vh; background: linear-gradient(180deg,#f1f5f3,#b8c4be); }
+.p3 .pbar { height: 12vh; background: linear-gradient(180deg,#f0b27a,#c27a3e); }
+.p1 .pname { color: var(--gold); }

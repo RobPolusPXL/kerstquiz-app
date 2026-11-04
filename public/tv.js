@@ -19,7 +19,8 @@ function render() {
 
   // Scorebord heeft altijd voorrang als de moderator het toont.
   if (S.showScoreboard && S.scoreboard && !(r && r.mode === 'buzzer' && S.roundState === 'running' && S.buzz && (S.buzz.open || S.buzz.lockedByName)) && !(r && r.mode === 'stepped' && S.roundState === 'running' && S.qOpen)) {
-    return set(`<h1>🏆 Tussenstand</h1><div class="sbtv">${scoreboardHTML(S.scoreboard.slice(0, 10), null)}</div>`);
+    const sb = S.scoreboard.slice(0, 10);
+    return set(`<h1>🏆 Tussenstand</h1>${sb.length >= 3 ? podiumHTML(sb) : `<div class="sbtv">${scoreboardHTML(sb, null)}</div>`}`);
   }
 
   if (!r) {
@@ -44,7 +45,7 @@ function render() {
     const p = S.progress || { done: 0, total: 0 };
     let extra;
     if (S.qRevealed) extra = `<div class="sub">Antwoord:</div><div class="who">${esc(S.revealAnswer)}</div>`;
-    else if (S.qOpen) extra = `<div class="big" id="tvTimer"></div><div class="sub">${p.done} van ${p.total} hebben geantwoord</div>`;
+    else if (S.qOpen) extra = `${ringHTML()}<div class="sub">${p.done} van ${p.total} hebben geantwoord</div>`;
     else extra = '<div class="big">⏰ Tijd is om!</div>';
     return set(`<div class="sub">${esc(r.title)} · Vraag ${S.qIndex + 1} / ${S.qCount}</div><div class="q">${esc(q.text)}</div>
       ${q.image ? `<img src="${esc(q.image)}" alt="">` : ''}${extra}`);
@@ -70,9 +71,29 @@ function render() {
   return set(`<div class="sub">${esc(r.title)}</div><h1>${r.mode === 'paced' ? '⏰ Tijd is om!' : 'Ronde afgelopen'}</h1>`);
 }
 
+const RING_R = 54, RING_C = 2 * Math.PI * RING_R;
+function ringHTML() {
+  return `<div class="ring"><svg viewBox="0 0 128 128" aria-hidden="true"><circle cx="64" cy="64" r="${RING_R}" class="rbg"/><circle cx="64" cy="64" r="${RING_R}" class="rfg" id="tvRing" stroke-dasharray="${RING_C}" stroke-dashoffset="0" transform="rotate(-90 64 64)"/></svg><div class="rtxt"><span id="tvTimer"></span></div></div>`;
+}
+function podiumHTML(rows) {
+  const col = (r, cls) => `<div class="pcol ${cls}"><div class="pname">${esc(r.name)}</div><div class="ppts">${fmtPts(r.total)} pt</div><div class="pbar"><span>${r.rank}</span></div></div>`;
+  return `<div class="podium">${col(rows[1], 'p2')}${col(rows[0], 'p1')}${col(rows[2], 'p3')}</div>`
+    + (rows.length > 3 ? `<div class="names">${rows.slice(3).map((r) => `<span>${r.rank}. ${esc(r.name)} · ${fmtPts(r.total)}</span>`).join('')}</div>` : '');
+}
+let ringTotal = 0, ringKey = '';
 function tick() {
   const el = $('#tvTimer');
   if (!el || !S || !S.endsAt) return;
-  el.textContent = fmtTime(S.endsAt - serverNow());
+  const left = S.endsAt - serverNow();
+  el.textContent = $('#tvRing') ? String(Math.ceil(Math.max(0, left) / 1000)) : fmtTime(left);
+  const ring = $('#tvRing');
+  if (ring) {
+    const key = S.roundIndex + ':' + S.qIndex;
+    if (key !== ringKey) { ringKey = key; ringTotal = left; }
+    if (left > ringTotal) ringTotal = left;
+    const f = ringTotal > 0 ? Math.min(1, Math.max(0, left / ringTotal)) : 0;
+    ring.setAttribute('stroke-dashoffset', String(RING_C * (1 - f)));
+    ring.classList.toggle('low', left <= 5000);
+  }
 }
 setInterval(tick, 250);
