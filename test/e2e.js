@@ -86,6 +86,9 @@ async function player(name, token) {
   ok(dup.joined.t === 'error', 'zelfde naam op ander toestel wordt geweigerd');
   await admin.state((s) => s.players.length === 3);
   ok(true, 'moderator ziet 3 spelers');
+  an.send({ t: 'ts', c: Date.now() });
+  const tr = await an.wait((m) => m.t === 'tr');
+  ok(Math.abs(tr.s - Date.now()) < 500 && typeof tr.c === 'number', 'klok-sync: server antwoordt onmiddellijk met servertijd');
 
   // --- ronde 1 (paced)
   cmd({ cmd: 'selectRound', index: 0 });
@@ -220,7 +223,7 @@ async function player(name, token) {
   cmd({ cmd: 'gotoQ', index: 1 });
   await an2.state((s) => s.qIndex === 1);
   an2.spDelay = 160;
-  await sleep(2400);
+  await sleep(3500);
   const rtt = admin.last.rtt && admin.last.rtt[an2.joined.id];
   ok(rtt >= 100, `server meet de ping van de trage speler (${rtt} ms)`);
   cmd({ cmd: 'openBuzzer' });

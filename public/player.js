@@ -12,6 +12,8 @@ let curQid = null;
 const pending = {};
 
 const sock = createSocket(onMsg, onStatus);
+startClockSync(sock);
+let lastDiagAt = 0;
 
 function onStatus(up) {
   $('#banner').hidden = up;
@@ -25,7 +27,14 @@ function onStatus(up) {
 }
 
 function onMsg(m) {
-  if (m.t === 'state') { checkVersion(m.ver); S = m; syncClock(m.now); render(); }
+  if (m.t === 'state') {
+    checkVersion(m.ver); S = m; syncClock(m.now);
+    if (S.me && S.buzz && S.buzz.open && S.buzz.openAt && S.buzz.openAt !== lastDiagAt) {
+      lastDiagAt = S.buzz.openAt;
+      sock.send({ t: 'diag', openAt: S.buzz.openAt, marge: Math.round(S.buzz.openAt - serverNow()) });
+    }
+    render();
+  }
   else if (m.t === 'joined') {
     localStorage.setItem(TOKEN_KEY, m.token);
     resuming = false; joinError = '';

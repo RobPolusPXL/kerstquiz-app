@@ -67,7 +67,7 @@ function loadQuiz() {
 
 /* ------------------------------------------------------------------ state */
 
-const freshBuzz = () => ({ open: false, openAt: 0, lockedBy: null, excluded: [], winner: null, log: [] });
+const freshBuzz = () => ({ open: false, openAt: 0, lockedBy: null, excluded: [], winner: null, log: [], margin: {} });
 const freshState = () => ({
   roundIndex: -1,
   roundState: 'idle', // idle | ready | running | closed
@@ -309,12 +309,17 @@ function adminView() {
     winner: state.buzz.winner,
     winnerName: nameOf(state.buzz.winner),
     log: state.buzz.log,
+    margin: Object.fromEntries(Object.entries(state.buzz.margin || {}).map(([pid, m]) => [nameOf(pid), m])),
     excluded: state.buzz.excluded,
     excludedNames: state.buzz.excluded.map(nameOf).filter(Boolean)
   };
   v.players = Object.values(state.players).map((p) => ({ id: p.id, name: p.name, online: isOnline(p.id) }));
   v.rtt = {};
-  for (const c of clients.values()) if (c.pid && c.rtt != null) v.rtt[c.pid] = Math.round(c.rtt);
+  v.clk = {};
+  for (const c of clients.values()) {
+    if (c.pid && c.rtt != null) v.rtt[c.pid] = Math.round(c.rtt);
+    if (c.pid && c.clkErr != null) v.clk[c.pid] = c.clkErr;
+  }
   v.answers = state.answers;
   v.marks = state.marks;
   v.points = {};
@@ -497,7 +502,7 @@ function adminCmd(msg) {
     case 'openBuzzer':
       if (cur && state.roundState === 'running') {
         clearBuzzPending();
-        state.buzz.open = true; state.buzz.openAt = Date.now() + BUZZ_LEAD_MS; state.buzz.lockedBy = null; state.buzz.winner = null; state.buzz.log = [];
+        state.buzz.open = true; state.buzz.openAt = Date.now() + BUZZ_LEAD_MS; state.buzz.lockedBy = null; state.buzz.winner = null; state.buzz.log = []; state.buzz.margin = {};
       }
       break;
     case 'closeBuzzer':
@@ -521,6 +526,7 @@ function adminCmd(msg) {
         state.buzz.excluded.push(state.buzz.lockedBy);
         state.buzz.lockedBy = null;
         state.buzz.log = [];
+        state.buzz.margin = {};
         state.buzz.open = true;
         state.buzz.openAt = Date.now() + BUZZ_LEAD_MS;
       }
@@ -638,9 +644,28 @@ function onMessage(ws, c, msg) {
       const t = Number(msg.i);
       const rtt = Date.now() - t;
       if (!t || rtt < 0 || rtt > 5000) return;
-      c.rtt = c.rtt == null ? rtt : c.rtt * 0.6 + rtt * 0.4;
+      // Laagste recente ping = basisvertraging zonder wachtrij/jitter (nauwkeuriger dan een gemiddelde).
+      c.rtts = c.rtts || [];
+      c.rtts.push(rtt);
+      if (c.rtts.length > 10) c.rtts.shift();
+      c.rtt = Math.min(...c.rtts);
       break;
     }
+
+    case 'ts': // klok-synchronisatie: antwoord onmiddellijk met de servertijd
+      send(ws, { t: 'tr', c: msg.c, s: Date.now() });
+      break;
+
+    case 'clk':
+      if (c.pid && Number.isFinite(Number(msg.err))) c.clkErr = Math.round(Number(msg.err));
+      break;
+
+    case 'diag': // marge waarmee het 'open'-bericht vóór het openingstijdstip aankwam
+      if (c.pid && state.buzz.open && Number(msg.openAt) === state.buzz.openAt && Number.isFinite(Number(msg.marge))) {
+        state.buzz.margin[c.pid] = Math.round(Number(msg.marge));
+        changed();
+      }
+      break;
 
     case 'admin_login': {
       const a = Buffer.from(String(msg.password || ''));

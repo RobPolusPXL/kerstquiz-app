@@ -190,6 +190,10 @@ function buzzerHTML(r, st) {
   else if (b.winnerName) status = `✔ Juist: ${esc(b.winnerName)} (+${fmtPts(q.points)})`;
   else status = '🔴 Buzzer is dicht';
   if (b.excludedNames.length) status += ` <span class="mute small">(fout: ${b.excludedNames.map(esc).join(', ')})</span>`;
+  const mg = Object.entries(b.margin || {});
+  if (mg.length) {
+    status += `<div class="small mute" style="font-weight:400;margin-top:4px">Marge waarmee "open" aankwam: ${mg.map(([n, m]) => `${esc(n)} <b style="color:${m < 300 ? 'var(--bad)' : 'var(--ok)'}">${m} ms</b>`).join(' · ')} <span class="small">(onder 0 = te laat)</span></div>`;
+  }
   if (b.log && b.log.length) {
     status += `<div class="small mute" style="font-weight:400;margin-top:4px">Volgorde: ${b.log.map((x) => `${esc(x.name)} ${x.delta === 0 ? '(eerst)' : '+' + x.delta + ' ms'} · ping ${x.rtt} ms`).join(' | ')}</div>`;
   }
@@ -217,12 +221,13 @@ function playersHTML() {
   const r = curRound();
   let h = `<h2>Spelers (${S.players.length}/${S.settings.maxPlayers})</h2>`;
   if (!S.players.length) return h + '<p class="mute">Nog niemand binnen.</p>';
-  h += '<table><tr><th>Naam</th><th class="num">Ingevuld</th><th class="num">Ping</th><th class="num">Punten</th><th></th></tr>';
+  h += '<table><tr><th>Naam</th><th class="num">Ingevuld</th><th class="num">Ping / klok</th><th class="num">Punten</th><th></th></tr>';
   const total = {}; S.fullScores.forEach((s) => { total[s.id] = s.total; });
   S.players.forEach((p) => {
     const prog = r && r.mode === 'paced' ? `${r.questions.filter((q) => answered(p.id, q)).length}/${r.questions.length}` : '–';
     const rtt = S.rtt && S.rtt[p.id];
-    const ping = p.online && rtt != null ? `<span style="color:${rtt > 150 ? 'var(--bad)' : 'var(--mute)'}">${rtt} ms</span>` : '–';
+    const clk = S.clk && S.clk[p.id];
+    const ping = p.online && rtt != null ? `<span style="color:${rtt > 150 ? 'var(--bad)' : 'var(--mute)'}">${rtt} ms</span>${clk != null ? ` <span class="mute small">± ${clk}</span>` : ''}` : '–';
     h += `<tr><td><span class="dot ${p.online ? 'on' : ''}"></span>${esc(p.name)}</td><td class="num">${prog}</td><td class="num">${ping}</td><td class="num">${fmtPts(total[p.id] || 0)}</td>
       <td class="num"><button class="sm ghost" data-cmd="kick" data-pid="${p.id}" data-confirm="${esc(p.name)} verwijderen (incl. antwoorden)?">✕</button></td></tr>`;
   });

@@ -23,13 +23,18 @@ let havePingClock = false;
 const clockSamples = [];
 // Grove schatting uit een state-bericht, tot er nauwkeurige ping-metingen zijn.
 const syncClock = (serverTs) => { if (!havePingClock) clockOffset = serverTs - Date.now(); };
-// Nauwkeuriger: server-tijd i bij verzending + halve gemeten ping r = server-tijd bij ontvangst. Mediaan van de laatste samples.
-function pingClock(i, r) {
-  if (r == null) return;
-  clockSamples.push(i + r / 2 - Date.now());
-  if (clockSamples.length > 9) clockSamples.shift();
-  const sorted = clockSamples.slice().sort((a, b) => a - b);
-  clockOffset = sorted[Math.floor(sorted.length / 2)];
+// NTP-achtige meting: c0 = verzendtijd (client), s = servertijd bij antwoord, c1 = ontvangsttijd (client).
+// De sample met de laagste round-trip heeft de kleinste fout (maximaal rtt/2), dus die gebruiken we.
+let clockErr = null;
+function clockSample(c0, s, c1) {
+  const rtt = c1 - c0;
+  if (rtt < 0 || rtt > 3000) return;
+  clockSamples.push({ rtt, off: s + rtt / 2 - c1 });
+  if (clockSamples.length > 25) clockSamples.shift();
+  let best = clockSamples[0];
+  for (const x of clockSamples) if (x.rtt < best.rtt) best = x;
+  clockOffset = best.off;
+  clockErr = best.rtt / 2;
   havePingClock = true;
 }
 const serverNow = () => Date.now() + clockOffset;
@@ -38,6 +43,12 @@ const fmtTime = (ms) => {
   return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 };
 const fmtPts = (n) => (Math.round(n * 100) / 100).toString().replace('.', ',');
+
+// Spelers meten continu hun klokverschil met de server (4x per seconde) en melden de nauwkeurigheid.
+function startClockSync(sock) {
+  setInterval(() => sock.send({ t: 'ts', c: Date.now() }), 250);
+  setInterval(() => { if (clockErr != null) sock.send({ t: 'clk', err: Math.round(clockErr) }); }, 2000);
+}
 
 function createSocket(onMsg, onStatus) {
   let ws, retry = 0;
@@ -54,7 +65,8 @@ function createSocket(onMsg, onStatus) {
     ws.onmessage = (e) => {
       try {
         const m = JSON.parse(e.data);
-        if (m.t === 'sp') { ws.send('{"t":"sa","i":' + m.i + '}'); pingClock(m.i, m.r); return; }
+        if (m.t === 'sp') { ws.send('{"t":"sa","i":' + m.i + '}'); return; }
+        if (m.t === 'tr') { clockSample(m.c, m.s, Date.now()); return; }
         onMsg(m);
       } catch (err) { console.error(err); }
     };
