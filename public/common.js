@@ -77,9 +77,28 @@ function createSocket(onMsg, onStatus) {
   return api;
 }
 
+const ICON_CLOCK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>';
+const ICON_CHECK = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const ICON_CROSS = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const ICON_TROPHY = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H4v1a3 3 0 0 0 4 2.8M16 6h4v1a3 3 0 0 1-4 2.8M12 13v4M8 20h8M10 17h4"/></svg>';
+// "Jij staat 3e / 14 pt" voor onderaan de spelersschermen
+function myRankHTML(rows, meId) {
+  const me = rows && rows.find((r) => r.id === meId);
+  if (!me) return '';
+  return `<div class="myrank"><span class="mr-l">${ICON_TROPHY}<span>Jij staat ${me.rank}e</span></span><span class="mr-p">${fmtPts(me.total)} pt</span></div>`;
+}
+// Segmentbalk: done / cur / todo per vraag
+function segsHTML(n, curIdx, isDone, clickable) {
+  let h = '';
+  for (let i = 0; i < n; i++) {
+    const c = i === curIdx ? 'cur' : isDone(i) ? 'done' : '';
+    h += clickable ? `<button class="seg ${c}" data-i="${i}" aria-label="Vraag ${i + 1}"></button>` : `<span class="seg ${c}"></span>`;
+  }
+  return h;
+}
 function scoreboardHTML(rows, meId) {
   if (!rows || !rows.length) return '<p class="mute">Nog geen spelers.</p>';
   return '<ol class="sb" style="list-style:none">' + rows.map((r) =>
-    `<li class="${r.id === meId ? 'me' : ''}"><span class="rk">${r.rank}</span><span class="nm">${esc(r.name)}</span><span class="pt">${fmtPts(r.total)}</span></li>`
+    `<li class="${r.id === meId ? 'me' : ''}"><span class="rk">${r.rank}</span><span class="nm">${esc(r.name)}${r.id === meId ? ' (jij)' : ''}</span><span class="pt">${fmtPts(r.total)}</span></li>`
   ).join('') + '</ol>';
 }

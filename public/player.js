@@ -175,11 +175,14 @@ function buildPaced() {
 
   app.innerHTML = `<div class="wrap">
     <div class="head">
-      <div class="row"><div class="grow"><div class="small mute">${esc(r.title)}</div><div class="small">${esc(S.me.name)}</div></div><div class="timer" id="tm"></div></div>
-      <div class="dots" id="dots"></div><div id="allset"></div>
+      <div class="row"><div class="grow"><div class="eyebrow">Ronde ${S.roundIndex + 1} · ${esc(r.title)}</div><div class="pname">${esc(S.me.name)}</div></div><div class="pill" id="pill">${ICON_CLOCK}<span class="timer" id="tm"></span></div></div>
+      <div class="tbar"><i id="tbar"></i></div>
+      <div class="qlab" id="qlab"></div>
+      <div class="segs" id="dots"></div><div id="allset"></div>
     </div>
     <div class="card" id="qc"></div>
     <div class="nav"><button id="prev">◀ Vorige</button><button id="next" class="primary">Volgende ▶</button></div>
+    <div id="rank"></div>
   </div>`;
 
   const send = (qid, immediate) => {
@@ -194,7 +197,8 @@ function buildPaced() {
   };
 
   function dots() {
-    $('#dots').innerHTML = qs.map((q, i) => `<button class="${isDone(q) ? 'done' : ''} ${i === qi ? 'cur' : ''}" data-i="${i}">${i + 1}</button>`).join('');
+    $('#dots').innerHTML = segsHTML(qs.length, qi, (i) => isDone(qs[i]), true);
+    $('#qlab').textContent = `Vraag ${qi + 1} van ${qs.length}${qs[qi].points !== 1 ? ` · ${fmtPts(qs[qi].points)} punten` : ''}`;
     const all = qs.every(isDone);
     $('#allset').innerHTML = all ? '<div class="allset">✓ Alles ingevuld! Je kan nog aanpassen tot de tijd om is.</div>' : '';
     $('#next').textContent = qi === qs.length - 1 ? 'Klaar ✓' : 'Volgende ▶';
@@ -205,7 +209,7 @@ function buildPaced() {
     const q = qs[qi];
     curQid = q.id;
     const val = localAnswers[q.id];
-    let h = `<div class="small mute">Vraag ${qi + 1} / ${qs.length}${q.points !== 1 ? ` · ${fmtPts(q.points)} punten` : ''}</div><div class="qtext">${esc(q.text)}</div>`;
+    let h = `<div class="qtext">${esc(q.text)}</div>`;
     if (q.image) h += `<img class="qimg" src="${esc(q.image)}" alt="">`;
     if (q.type === 'choice') {
       h += '<div class="opts">' + q.options.map((o, i) => `<button class="opt ${val !== undefined && Number(val) === i ? 'sel' : ''}" data-i="${i}">${esc(o)}</button>`).join('') + '</div>';
@@ -244,11 +248,16 @@ function buildPaced() {
   });
 
   const tm = $('#tm');
+  let tTotal = (r.minutes || 0) * 60000;
   const tick = () => {
     if (!S || !S.endsAt) { tm.textContent = ''; return; }
     const left = S.endsAt - serverNow();
     tm.textContent = fmtTime(left);
     tm.classList.toggle('low', left < 60000);
+    $('#pill').classList.toggle('low', left < 60000);
+    if (left > tTotal) tTotal = left;
+    $('#tbar').style.width = (tTotal > 0 ? Math.min(100, Math.max(0, left / tTotal * 100)) : 0) + '%';
+    $('#rank').innerHTML = myRankHTML(S.scoreboard, S.me.id);
   };
   const iv = setInterval(tick, 250);
 
@@ -263,8 +272,9 @@ function buildPaced() {
 
 function buildBuzz() {
   app.innerHTML = `<div class="wrap">
-    <div class="card"><div class="small mute" id="bh"></div><div class="qtext" id="bq"></div><img id="bi" class="qimg" hidden alt=""></div>
-    <div class="buzzwrap"><button class="buzz" id="bz"></button><div class="bigstatus" id="bs"></div></div>
+    <div class="head"><div class="row"><div class="grow"><div class="eyebrow" id="bh0"></div><div class="pname">${esc(S.me.name)}</div></div><div class="pill plain" id="bh"></div></div></div>
+    <div class="card"><div class="qtext" id="bq"></div><img id="bi" class="qimg" hidden alt=""></div>
+    <div class="buzzwrap"><div class="halo"><button class="buzz" id="bz"></button></div><div class="bigstatus" id="bs"></div></div>
     <div id="bsb" style="margin-top:18px"></div></div>`;
   let active = false, waitT = null;
   const press = () => {
@@ -283,7 +293,8 @@ function buildBuzz() {
     update() {
       clearTimeout(waitT);
       const b = S.buzz, q = S.question;
-      $('#bh').textContent = q ? `Vraag ${S.qIndex + 1} / ${S.qCount}` : S.rounds[S.roundIndex].title;
+      $('#bh0').textContent = `Ronde ${S.roundIndex + 1} · ${S.rounds[S.roundIndex].title}`;
+      $('#bh').textContent = q ? `Vraag ${S.qIndex + 1} van ${S.qCount}` : 'Zet je schrap';
       $('#bq').textContent = q ? q.text : 'De eerste vraag komt eraan…';
       const img = $('#bi');
       if (q && q.image) { img.src = q.image; img.hidden = false; } else img.hidden = true;
@@ -304,7 +315,7 @@ function buildBuzz() {
       btn.className = cls;
       btn.textContent = label;
       $('#bs').textContent = status;
-      $('#bsb').innerHTML = S.scoreboard ? `<div class="card"><h2>🏆 Tussenstand</h2>${scoreboardHTML(S.scoreboard, S.me.id)}</div>` : '';
+      $('#bsb').innerHTML = S.scoreboard ? `<div class="card"><h2>${ICON_TROPHY} Tussenstand</h2>${scoreboardHTML(S.scoreboard, S.me.id)}</div>` : '';
     }
   };
 }
@@ -313,8 +324,9 @@ function buildBuzz() {
 
 function buildStepped() {
   app.innerHTML = `<div class="wrap">
-    <div class="head"><div class="row"><div class="grow"><div class="small mute" id="sh"></div><div class="small">${esc(S.me.name)}</div></div><div class="timer" id="tm"></div></div></div>
-    <div class="card" id="qc"></div><div id="res"></div><div id="ssb"></div></div>`;
+    <div class="head"><div class="row"><div class="grow"><div class="eyebrow" id="sh"></div><div class="pname">${esc(S.me.name)}</div></div><div class="pill" id="pill">${ICON_CLOCK}<span class="timer" id="tm"></span></div></div>
+      <div class="tbar"><i id="tbar"></i></div><div class="qlab" id="qlab"></div><div class="segs" id="segs"></div></div>
+    <div class="card" id="qc"></div><div id="res"></div><div id="rank"></div><div id="ssb"></div></div>`;
   const tm = $('#tm');
   let key = null, curQ = null, myVal, dirty = false, saveTimer = null;
 
@@ -331,7 +343,7 @@ function buildStepped() {
   function card() {
     const q = curQ, open = !!S.qOpen;
     curQid = q.id;
-    let h = `<div class="small mute">Vraag ${S.qIndex + 1} / ${S.qCount}${q.points !== 1 ? ` · ${fmtPts(q.points)} punten` : ''}</div><div class="qtext">${esc(q.text)}</div>`;
+    let h = `<div class="qtext">${esc(q.text)}</div>`;
     if (q.image) h += `<img class="qimg" src="${esc(q.image)}" alt="">`;
     if (q.type === 'choice') {
       h += '<div class="opts">' + q.options.map((o, i) => `<button class="opt ${myVal !== undefined && Number(myVal) === i ? 'sel' : ''}" data-i="${i}" ${open ? '' : 'disabled'}>${esc(o)}</button>`).join('') + '</div>';
@@ -354,12 +366,20 @@ function buildStepped() {
     }));
   }
 
+  let tTotal = 0, tKey = '';
   const tick = () => {
+    const pill = $('#pill'), bar = $('#tbar');
     if (S && S.qOpen && S.endsAt) {
       const left = S.endsAt - serverNow();
+      const k = S.roundIndex + ':' + S.qIndex;
+      if (k !== tKey) { tKey = k; tTotal = left; }
+      if (left > tTotal) tTotal = left;
       tm.textContent = fmtTime(left);
       tm.classList.toggle('low', left < 10000);
-    } else { tm.textContent = ''; tm.classList.remove('low'); }
+      pill.classList.toggle('low', left < 10000);
+      pill.hidden = false;
+      bar.style.width = (tTotal > 0 ? Math.min(100, Math.max(0, left / tTotal * 100)) : 0) + '%';
+    } else { tm.textContent = ''; tm.classList.remove('low'); pill.hidden = true; bar.style.width = '0%'; }
   };
   const iv = setInterval(tick, 250);
 
@@ -368,7 +388,9 @@ function buildStepped() {
     resend() { if (curQ && S.qOpen && myVal !== undefined) sendNow(); },
     update() {
       const q = S.question;
-      $('#sh').textContent = S.rounds[S.roundIndex].title;
+      $('#sh').textContent = `Ronde ${S.roundIndex + 1} · ${S.rounds[S.roundIndex].title}`;
+      $('#segs').innerHTML = segsHTML(S.qCount || 0, q ? S.qIndex : -1, (i) => i < S.qIndex, false);
+      $('#qlab').textContent = q ? `Vraag ${S.qIndex + 1} van ${S.qCount}${q.points !== 1 ? ` · ${fmtPts(q.points)} punten` : ''}` : '';
       if (!q) {
         key = null; curQ = null;
         $('#qc').innerHTML = '<div class="qtext center">De eerste vraag komt eraan…</div>';
@@ -386,13 +408,15 @@ function buildStepped() {
       let res = '';
       if (S.qRevealed && S.result) {
         const r = S.result, good = r.points > 0;
-        res = `<div class="card center"><h2 style="color:${good ? 'var(--ok)' : 'var(--bad)'}">${good ? '✓ Juist!' : '✗ Helaas'} ${fmtPts(r.points)}/${fmtPts(r.max)} pt</h2>
-          <p>Antwoord: <b>${esc(S.revealAnswer)}</b></p>
-          <p class="mute">${r.mine ? 'Jij: ' + esc(r.mine) : 'Je vulde niets in.'}</p></div>`;
+        res = `<div class="card result ${good ? 'good' : 'bad'}"><div class="ricon">${good ? ICON_CHECK : ICON_CROSS}</div>
+          <div class="rtitle">${good ? 'Juist!' : 'Helaas'}</div>
+          <div class="rans">Antwoord: <b>${esc(S.revealAnswer)}</b></div>
+          <div class="rpts">${good ? '+' + fmtPts(r.points) + (r.points === 1 ? ' punt' : ' punten') : '0 / ' + fmtPts(r.max) + ' punt'}</div>
+          <div class="rmine">${r.mine ? 'Jij: ' + esc(r.mine) : 'Je vulde niets in.'}</div></div>`;
       } else if (!S.qOpen) {
-        res = '<div class="card center"><p><b>⏰ Tijd is om!</b></p><p class="mute">Wacht op het juiste antwoord…</p></div>';
+        res = '<div class="card center"><div class="rtitle" style="font-size:1.6rem">Tijd is om!</div><p class="mute">Wacht op het juiste antwoord…</p></div>';
       }
-      const rh = res + (S.scoreboard ? `<div class="card"><h2>🏆 Tussenstand</h2>${scoreboardHTML(S.scoreboard, S.me.id)}</div>` : '');
+      const rh = res + (S.scoreboard ? `<div class="card"><h2>${ICON_TROPHY} Tussenstand</h2>${scoreboardHTML(S.scoreboard, S.me.id)}</div>` : '');
       if ($('#res')._h !== rh) { $('#res')._h = rh; $('#res').innerHTML = rh; }
       tick();
     }
