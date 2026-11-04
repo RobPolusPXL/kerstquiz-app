@@ -1,4 +1,19 @@
 'use strict';
+// Herlaadt de pagina automatisch als de server een nieuwe versie van de app draait; toont een klein versienummer.
+let loadedVer = null;
+function checkVersion(ver) {
+  if (!ver) return;
+  if (loadedVer === null) {
+    loadedVer = ver;
+    const el = document.createElement('div');
+    el.textContent = 'v' + ver;
+    el.style.cssText = 'position:fixed;left:6px;bottom:4px;font-size:10px;opacity:.35;pointer-events:none;z-index:5';
+    document.body.appendChild(el);
+  } else if (loadedVer !== ver) {
+    location.reload();
+  }
+}
+
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

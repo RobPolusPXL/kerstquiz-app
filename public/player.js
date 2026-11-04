@@ -25,7 +25,7 @@ function onStatus(up) {
 }
 
 function onMsg(m) {
-  if (m.t === 'state') { S = m; syncClock(m.now); render(); }
+  if (m.t === 'state') { checkVersion(m.ver); S = m; syncClock(m.now); render(); }
   else if (m.t === 'joined') {
     localStorage.setItem(TOKEN_KEY, m.token);
     resuming = false; joinError = '';

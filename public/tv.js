@@ -3,7 +3,7 @@ const root = $('#root');
 let S = null;
 
 const sock = createSocket((m) => {
-  if (m.t === 'state') { S = m; syncClock(m.now); render(); }
+  if (m.t === 'state') { checkVersion(m.ver); S = m; syncClock(m.now); render(); }
 }, (up) => {
   $('#banner').hidden = up;
   if (up) sock.send({ t: 'hello', role: 'tv' });

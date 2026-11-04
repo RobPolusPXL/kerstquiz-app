@@ -19,6 +19,7 @@ function onMsg(m) {
   if (m.t === 'admin_ok') {
     localStorage.setItem(TOKEN_KEY, m.token);
   } else if (m.t === 'admin') {
+    checkVersion(m.ver);
     S = m; syncClock(m.now);
     $('#login').hidden = true; $('#dash').hidden = false;
     render();

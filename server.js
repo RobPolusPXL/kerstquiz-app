@@ -20,6 +20,17 @@ if (!ADMIN_PASSWORD) {
   console.log(`[kerstquiz] Geen ADMIN_PASSWORD ingesteld. Tijdelijk moderatorwachtwoord: ${ADMIN_PASSWORD}`);
 }
 
+/* Versie van de clientbestanden: pagina's herladen zichzelf als die verandert (geen oude JS op open gsm's). */
+function buildHash() {
+  const h = crypto.createHash('sha1');
+  for (const f of fs.readdirSync(PUBLIC_DIR).sort()) {
+    const fp = path.join(PUBLIC_DIR, f);
+    if (fs.statSync(fp).isFile()) h.update(f).update(fs.readFileSync(fp));
+  }
+  return h.digest('hex').slice(0, 6);
+}
+const BUILD = buildHash();
+
 /* ---------------------------------------------------------------- vragen */
 
 let quiz = { title: 'Kerstquiz', rounds: [] };
@@ -194,6 +205,7 @@ function baseView() {
   const r = curRound();
   const v = {
     t: 'state',
+    ver: BUILD,
     now: Date.now(),
     title: quiz.title,
     rounds: quiz.rounds.map((x) => ({ id: x.id, title: x.title, mode: x.mode, minutes: x.minutes, count: x.questions.length, intro: x.intro })),
