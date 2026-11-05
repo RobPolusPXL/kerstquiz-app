@@ -9,7 +9,19 @@
       "minutes": 15,
       "seconds": 45,
       "intro": "We gaan vraag per vraag. Antwoord binnen de tijd.",
-      "questions": []
+      "questions": [
+        {
+          "id": "r1q1",
+          "type": "text",
+          "text": "In welk land wordt als allereerst Nieuwjaar gevierd?",
+          "answers": [
+            "Kiribati",
+            "Kiritimati",
+            "Christmas Island"
+          ],
+          "note": "Eiland Kiritimati (UTC+14), Kiribati."
+        }
+      ]
     },
     {
       "id": "r2",
