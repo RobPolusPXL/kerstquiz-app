@@ -1,0 +1,105 @@
+{
+  "title": "Kerstquiz 2026",
+  "_uitleg": "Vragen per ronde. mode: 'stepped' = vraag per vraag, jij start elke vraag (timer = seconds per vraag), 'buzzer' = live, eerste die buzzt mag antwoorden, 'paced' = alle vragen tegelijk op eigen tempo binnen 'minutes'. type: 'text' | 'number' | 'choice'. Bij 'choice': options + correct (index vanaf 0). Bij 'text'/'number': answers = lijst aanvaarde antwoorden (hoofdletters/accenten/leestekens maken niet uit, kleine tikfouten worden getolereerd; de moderator kan altijd corrigeren). Optioneel: image ('/media/bestand.jpg'), points (standaard 1), note (enkel zichtbaar voor moderator). Geef vragen een vaste 'id' als je ze nog wil herordenen nadat het spel gestart is. Dit zijn voorbeeldvragen uit editie 1: vervang door die van 2026.",
+  "rounds": [
+    {
+      "id": "r1",
+      "title": "Algemene kennis",
+      "mode": "stepped",
+      "minutes": 15,
+      "seconds": 45,
+      "intro": "We gaan vraag per vraag. Antwoord binnen de tijd.",
+      "questions": []
+    },
+    {
+      "id": "r2",
+      "title": "Het jaar in beeld",
+      "mode": "stepped",
+      "minutes": 15,
+      "seconds": 30,
+      "intro": "Een terugblik op 2026, vraag per vraag.",
+      "questions": [
+        {
+          "id": "r2q1",
+          "type": "choice",
+          "text": "Januari: welk land werd op 1 januari het nieuwste lid van de eurozone?",
+          "options": [
+            "Bulgarije",
+            "Roemenië",
+            "Polen",
+            "Hongarije"
+          ],
+          "correct": 0
+        },
+        {
+          "id": "r2q3",
+          "type": "choice",
+          "text": "Maart: welke film won de Oscar voor beste film?",
+          "options": [
+            "One Battle After Another",
+            "Sinners",
+            "Hamnet",
+            "Marty Supreme"
+          ],
+          "correct": 0
+        },
+        {
+          "id": "r2q5",
+          "type": "choice",
+          "text": "Mei: welk land won het Eurovisiesongfestival?",
+          "options": [
+            "Bulgarije",
+            "Frankrijk",
+            "Finland",
+            "Israël"
+          ],
+          "correct": 0
+        },
+        {
+          "id": "r2q7",
+          "type": "choice",
+          "text": "Juli: welk land werd wereldkampioen voetbal?",
+          "options": [
+            "Spanje",
+            "Argentinië",
+            "Frankrijk",
+            "Brazilië"
+          ],
+          "correct": 0
+        },
+        {
+          "id": "r2q9",
+          "type": "choice",
+          "text": "September: Apple presenteerde zijn eerste opvouwbare iPhone. Hoe heet die?",
+          "options": [
+            "iPhone Duo",
+            "iPhone Flip",
+            "iPhone Fold",
+            "iPhone Air Fold"
+          ],
+          "correct": 0
+        },
+        {
+          "id": "r2q11",
+          "type": "choice",
+          "text": "November: welke langverwachte game verscheen eindelijk, na jaren uitstel?",
+          "options": [
+            "Grand Theft Auto VI",
+            "Half-Life 3",
+            "The Elder Scrolls VI",
+            "Red Dead Redemption 3"
+          ],
+          "correct": 0
+        }
+      ]
+    },
+    {
+      "id": "r3",
+      "title": "Buzzerronde",
+      "mode": "buzzer",
+      "minutes": 15,
+      "intro": "Wie het eerst buzzt, mag antwoorden. Fout? Dan mogen de anderen.",
+      "questions": []
+    }
+  ]
+}

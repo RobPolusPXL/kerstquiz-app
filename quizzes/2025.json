@@ -1,5 +1,5 @@
 {
-  "title": "Kerstquiz 2026",
+  "title": "Kerstquiz 2025",
   "_uitleg": "Vragen per ronde. mode: 'stepped' = vraag per vraag, jij start elke vraag (timer = seconds per vraag), 'buzzer' = live, eerste die buzzt mag antwoorden, 'paced' = alle vragen tegelijk op eigen tempo binnen 'minutes'. type: 'text' | 'number' | 'choice'. Bij 'choice': options + correct (index vanaf 0). Bij 'text'/'number': answers = lijst aanvaarde antwoorden (hoofdletters/accenten/leestekens maken niet uit, kleine tikfouten worden getolereerd; de moderator kan altijd corrigeren). Optioneel: image ('/media/bestand.jpg'), points (standaard 1), note (enkel zichtbaar voor moderator). Geef vragen een vaste 'id' als je ze nog wil herordenen nadat het spel gestart is. Dit zijn voorbeeldvragen uit editie 1: vervang door die van 2026.",
   "rounds": [
     {
@@ -390,5 +390,6 @@
         }
       ]
     }
-  ]
+  ],
+  "archief": true
 }

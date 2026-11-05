@@ -280,3 +280,14 @@ button.seg::after { content: ""; position: absolute; inset: -10px -1px; }
 .tvbar { display: flex; flex-direction: column; gap: 1.2vh; font-size: 2vw; font-weight: 700; color: var(--mute); }
 .tvbar .bar { height: 1.8vh; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
 .tvbar .bar i { display: block; height: 100%; border-radius: 999px; background: var(--ok); transition: width .4s; }
+
+/* ranking */
+.rk-scroll { overflow-x: auto; }
+.rk-table td, .rk-table th { padding: 10px 8px; }
+.rk-table td small { color: var(--mute); font-size: .75rem; }
+.rk-name { font-weight: 700; }
+.rk-total { font-family: Fraunces, Georgia, serif; font-weight: 800; font-size: 1.15rem; color: var(--gold); }
+.rk-badge { display: inline-flex; align-items: center; justify-content: center; width: 1.9em; height: 1.9em; border-radius: 50%; font-weight: 800; color: var(--mute); }
+.rk-badge.r1 { background: linear-gradient(135deg,#ffe08a,#f2c14e); color: #3b2a00; }
+.rk-badge.r2 { background: linear-gradient(135deg,#f1f5f3,#b8c4be); color: #3b2a00; }
+.rk-badge.r3 { background: linear-gradient(135deg,#f0b27a,#c27a3e); color: #3b2a00; }

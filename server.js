@@ -7,8 +7,23 @@ const { WebSocketServer } = require('ws');
 
 const PORT = Number(process.env.PORT) || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-const STATE_FILE = path.join(DATA_DIR, 'state.json');
-const QUESTIONS_FILE = process.env.QUESTIONS_FILE || path.join(__dirname, 'questions.json');
+const QUIZZES_DIR = path.join(__dirname, 'quizzes');
+
+/* Elk jaar heeft een eigen vragenbestand (quizzes/<jaar>.json) en een eigen spelstatus (data/state-<jaar>.json).
+   Actief jaar: QUIZ_YEAR, anders het hoogste jaar in quizzes/. Met QUESTIONS_FILE kan een los bestand gebruikt worden (tests). */
+function listYears() {
+  try { return fs.readdirSync(QUIZZES_DIR).map((f) => (f.match(/^(\d{4})\.json$/) || [])[1]).filter(Boolean).map(Number).sort((a, b) => a - b); } catch (e) { return []; }
+}
+let YEAR = null;
+let QUESTIONS_FILE = process.env.QUESTIONS_FILE || null;
+if (!QUESTIONS_FILE) {
+  const years = listYears();
+  YEAR = Number(process.env.QUIZ_YEAR) || years[years.length - 1] || null;
+  if (!YEAR) { console.error('[kerstquiz] Geen vragenbestand gevonden in quizzes/'); process.exit(1); }
+  QUESTIONS_FILE = path.join(QUIZZES_DIR, `${YEAR}.json`);
+} else if (process.env.QUIZ_YEAR) YEAR = Number(process.env.QUIZ_YEAR);
+const STATE_FILE = path.join(DATA_DIR, YEAR ? `state-${YEAR}.json` : 'state.json');
+let ARCHIEF = false; // archiefjaren (zoals 2025) houden geen stand bij
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const GRACE_MS = 1500;
 // De buzzer opent op alle gsm's op hetzelfde geplande tijdstip (nu + lead), zodat netwerkvertraging niemand benadeelt.
@@ -60,6 +75,7 @@ function loadQuiz() {
       }))
     };
   });
+  ARCHIEF = !!raw.archief;
   quiz = { title: raw.title || 'Kerstquiz', rounds };
   qById.clear();
   rounds.forEach((r, ri) => r.questions.forEach((q) => qById.set(q.id, { q, ri })));
@@ -109,6 +125,7 @@ function saveNow() {
     const tmp = STATE_FILE + '.tmp';
     fs.writeFileSync(tmp, JSON.stringify(state));
     fs.renameSync(tmp, STATE_FILE);
+    writeStandings();
   } catch (e) {
     console.error('[kerstquiz] opslaan mislukt:', e.message);
   }
@@ -187,6 +204,40 @@ function computeScores() {
   return rows;
 }
 
+/* ------------------------------------------------ stand per jaar + ranking */
+
+function writeStandings() {
+  if (!YEAR || ARCHIEF || !Object.keys(state.players).length) return;
+  const players = computeScores().map((s) => ({ name: s.name, total: s.total, rank: s.rank }));
+  const file = path.join(DATA_DIR, `standings-${YEAR}.json`);
+  fs.writeFileSync(file + '.tmp', JSON.stringify({ year: YEAR, title: quiz.title, updated: new Date().toISOString(), players }));
+  fs.renameSync(file + '.tmp', file);
+}
+
+// Algemene ranking: voegt de standen van alle bewaarde jaren samen op naam.
+function rankingData() {
+  const years = [], by = new Map();
+  let files = [];
+  try { files = fs.readdirSync(DATA_DIR).filter((f) => /^standings-\d{4}\.json$/.test(f)).sort(); } catch (e) { /* geen data */ }
+  for (const f of files) {
+    let s;
+    try { s = JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), 'utf8')); } catch (e) { continue; }
+    years.push(s.year);
+    for (const p of s.players || []) {
+      const k = norm(p.name);
+      if (!by.has(k)) by.set(k, { name: p.name, total: 0, wins: 0, years: {} });
+      const e = by.get(k);
+      e.years[s.year] = { total: p.total, rank: p.rank, of: s.players.length };
+      e.total = r2(e.total + p.total);
+      if (p.rank === 1 && p.total > 0) e.wins++;
+    }
+  }
+  const players = [...by.values()].sort((a, b) => b.total - a.total || b.wins - a.wins || a.name.localeCompare(b.name));
+  let rank = 0, prev = null;
+  players.forEach((p, i) => { if (p.total !== prev) { rank = i + 1; prev = p.total; } p.rank = rank; p.played = Object.keys(p.years).length; });
+  return { years, players };
+}
+
 /* ------------------------------------------------------------------ views */
 
 const clients = new Map(); // ws -> { role, pid, admin }
@@ -208,6 +259,7 @@ function baseView() {
     ver: BUILD,
     now: Date.now(),
     title: quiz.title,
+    year: YEAR,
     rounds: quiz.rounds.map((x) => ({ id: x.id, title: x.title, mode: x.mode, minutes: x.minutes, count: x.questions.length, intro: x.intro })),
     roundIndex: state.roundIndex,
     roundState: state.roundState,
@@ -549,7 +601,7 @@ function adminCmd(msg) {
       if (msg.locked !== undefined) state.settings.locked = !!msg.locked;
       break;
     case 'reloadQuiz':
-      try { loadQuiz(); } catch (e) { return { error: 'questions.json is ongeldig: ' + e.message }; }
+      try { loadQuiz(); } catch (e) { return { error: path.basename(QUESTIONS_FILE) + ' is ongeldig: ' + e.message }; }
       break;
     case 'reset':
       if (msg.what === 'all') {
@@ -708,11 +760,15 @@ const MIME = {
   '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
   '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.mp3': 'audio/mpeg', '.webmanifest': 'application/manifest+json'
 };
-const ROUTES = { '/': 'index.html', '/admin': 'admin.html', '/tv': 'tv.html' };
+const ROUTES = { '/': 'index.html', '/admin': 'admin.html', '/tv': 'tv.html', '/ranking': 'ranking.html' };
 
 const server = http.createServer((req, res) => {
   let url = decodeURIComponent((req.url || '/').split('?')[0]);
   if (url === '/healthz') { res.writeHead(200); return res.end('ok'); }
+  if (url === '/api/ranking') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+    return res.end(JSON.stringify(rankingData()));
+  }
   const rel = ROUTES[url] || url.replace(/^\/+/, '');
   const file = path.join(PUBLIC_DIR, path.normalize(rel));
   if (!file.startsWith(PUBLIC_DIR + path.sep)) { res.writeHead(403); return res.end('Forbidden'); }

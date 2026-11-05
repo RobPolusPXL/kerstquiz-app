@@ -106,7 +106,8 @@ const sbCard = () => (S.scoreboard ? `<div class="card"><h2>🏆 Tussenstand</h2
 function lobbyHTML() {
   return `${head()}<div class="card"><h2>Welkom!</h2><p>De quiz begint zo. Hou dit scherm open.</p>
     <p class="small mute">Ook aan het meedoen:</p>
-    <div class="chips">${S.names.map((n) => `<span class="chip" style="cursor:default"><span class="dot ${n.online ? 'on' : ''}"></span>${esc(n.name)}</span>`).join('')}</div></div>${sbCard()}`;
+    <div class="chips">${S.names.map((n) => `<span class="chip" style="cursor:default"><span class="dot ${n.online ? 'on' : ''}"></span>${esc(n.name)}</span>`).join('')}</div></div>${sbCard()}
+    <p class="center small"><a href="/ranking" style="color:var(--gold)">Ranking over de jaren</a></p>`;
 }
 
 function readyHTML() {
