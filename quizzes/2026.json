@@ -15,9 +15,7 @@
           "type": "text",
           "text": "In welk land wordt als allereerst Nieuwjaar gevierd?",
           "answers": [
-            "Kiribati",
-            "Kiritimati",
-            "Christmas Island"
+            "Kiribati"
           ],
           "note": "Eiland Kiritimati (UTC+14), Kiribati."
         }
