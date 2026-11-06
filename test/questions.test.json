@@ -9,7 +9,8 @@
     ] },
     { "id": "t2", "title": "Stepped", "mode": "stepped", "seconds": 1, "questions": [
       { "type": "text", "text": "Hoofdstad Australië?", "answers": ["Canberra"] },
-      { "type": "choice", "text": "Spin poten?", "options": ["6", "8", "10"], "correct": 1 }
+      { "type": "choice", "text": "Spin poten?", "options": ["6", "8", "10"], "correct": 1 },
+      { "id": "t2parts", "type": "text", "text": "Datum slag?", "parts": [ { "answers": ["11 juli", "11/7"], "points": 1 }, { "answers": ["1302"], "points": 1 } ] }
     ] },
     { "id": "t3", "title": "Buzzer", "mode": "buzzer", "questions": [
       { "type": "text", "text": "Wie schilderde De Nachtwacht?", "answers": ["Rembrandt"] },

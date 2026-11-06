@@ -70,7 +70,8 @@ function loadQuiz() {
         options: Array.isArray(q.options) ? q.options.map(String) : null,
         correct: Number.isInteger(q.correct) ? q.correct : null,
         answers: Array.isArray(q.answers) ? q.answers.map(String) : q.answer ? [String(q.answer)] : [],
-        points: q.points === undefined ? 1 : Number(q.points),
+        parts: Array.isArray(q.parts) && q.parts.length ? q.parts.map((p) => ({ answers: (Array.isArray(p.answers) ? p.answers : [p.answer]).filter((a) => a != null).map(String), points: p.points === undefined ? 1 : Number(p.points) })) : null,
+        points: q.points !== undefined ? Number(q.points) : Array.isArray(q.parts) && q.parts.length ? q.parts.reduce((t, p) => t + (p.points === undefined ? 1 : Number(p.points)), 0) : 1,
         note: q.note || ''
       }))
     };
@@ -171,6 +172,10 @@ function matches(q, val) {
 function autoPoints(q, ans) {
   if (ans == null || ans === '') return 0;
   if (q.type === 'choice') return q.correct !== null && Number(ans) === q.correct ? q.points : 0;
+  if (q.parts) { // deelpunten: elk deel telt als zijn antwoord ergens in de getypte tekst staat
+    const nv = norm(ans);
+    return q.parts.reduce((t, p) => t + (p.answers.some((a) => { const na = norm(a); return na && nv.includes(na); }) ? p.points : 0), 0);
+  }
   return matches(q, ans) ? q.points : 0;
 }
 function qp(pid, q) {
@@ -183,6 +188,7 @@ const r2 = (n) => Math.round(n * 100) / 100;
 
 function correctText(q) {
   if (q.type === 'choice') return q.correct !== null && q.options ? q.options[q.correct] : '';
+  if (q.parts) return q.parts.map((p) => p.answers[0] || '').join(' ');
   return q.answers.slice(0, 3).join(' / ');
 }
 function answerText(q, a) {

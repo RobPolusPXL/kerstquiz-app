@@ -24,6 +24,7 @@ Per jaar heeft de spelstatus een eigen bestand (`data/state-<jaar>.json`) en wor
 De algemene ranking over alle jaren staat op `/ranking` (opgebouwd uit die standen, spelers worden op naam samengevoegd).
 Vraagtypes: `choice`, `text`, `number`. Rondemodi: `stepped` (vraag per vraag, jij start elke vraag, `seconds` = timer per vraag; meerkeuze is definitief bij de eerste keuze, tekst/getal na "Vergrendel antwoord"; de vraag sluit vroeg zodra alle verbonden spelers klaar zijn, anders bij het aflopen van de timer),
 `buzzer` (live) en `paced` (alle vragen tegelijk op eigen tempo binnen `minutes`).
+Deelpunten: geef een vraag `"parts": [{"answers": [...], "points": 1}, ...]` (type `text`); elk deel scoort apart als zijn antwoord ergens in de getypte tekst staat (bv. datum + jaar). `points` is dan de som.
 Afbeeldingen: zet ze in `public/media/` en verwijs met `"image": "/media/foto.jpg"`.
 Geef vragen een vaste `id` als je ze nog herordent nadat het spel gestart is.
 

@@ -211,6 +211,20 @@ async function player(name, token) {
   const early2 = await an2.state((s) => !s.qOpen, 3000);
   ok(early2.endsAt > Date.now(), 'stepped: tekstvraag sluit vroeg als iedereen vergrendeld heeft');
 
+  // --- deelpunten: elk deel van het antwoord telt apart
+  cmd({ cmd: 'gotoQ', index: 2 });
+  await an2.state((s) => s.qIndex === 2 && s.qOpen);
+  an2.send({ t: 'answer', qid: 't2parts', value: 'Op 11 juli 1302' });
+  bo.send({ t: 'answer', qid: 't2parts', value: 'het was in 1302' });
+  cy.send({ t: 'answer', qid: 't2parts', value: '1066' });
+  await an2.state((s) => !s.qOpen, 4000);
+  cmd({ cmd: 'revealQ' });
+  const pa = await an2.state((s) => s.qRevealed && s.result);
+  const pb = await bo.state((s) => s.qRevealed && s.result);
+  const pc = await cy.state((s) => s.qRevealed && s.result);
+  ok(pa.result.points === 2 && pa.result.max === 2 && pa.revealAnswer === '11 juli 1302', 'deelpunten: beide delen goed = 2 punten');
+  ok(pb.result.points === 1 && pc.result.points === 0, 'deelpunten: één deel = 1 punt, niets goed = 0');
+
   // --- ronde 3 (buzzer)
   cmd({ cmd: 'selectRound', index: 2 });
   cmd({ cmd: 'startRound' });
