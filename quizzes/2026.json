@@ -54,6 +54,16 @@
           ],
           "correct": 2,
           "note": "Rovaniemi ligt in Finland (Santa Claus Village, aan de poolcirkel). Lapland als streek loopt over Noorwegen, Zweden, Finland en Rusland."
+        },
+        {
+          "id": "r1q5",
+          "type": "number",
+          "text": "Hoeveel dagen na Pasen valt Pinksteren?",
+          "answers": [
+            "49",
+            "50"
+          ],
+          "note": "50 = de vijftigste dag, Paaszondag meegeteld (de naam Pinksteren); 49 = het verschil in dagen tussen Paaszondag en Pinksterzondag. Beide aanvaard."
         }
       ]
     },
