@@ -51,6 +51,18 @@
           "correct": 0
         },
         {
+          "id": "r2q2",
+          "type": "choice",
+          "text": "Februari: wie speelde de halftime show van de Super Bowl? (Tip: de meest gestreamde artiest van 2025 op Spotify.)",
+          "options": [
+            "Taylor Swift",
+            "Bruno Mars",
+            "Bad Bunny",
+            "Drake"
+          ],
+          "correct": 2
+        },
+        {
           "id": "r2q3",
           "type": "choice",
           "text": "Maart: welke film won de Oscar voor beste film?",
