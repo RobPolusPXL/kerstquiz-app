@@ -155,7 +155,7 @@ function steppedHTML(r, st) {
     return h + `<button class="primary" data-cmd="gotoQ" data-n-index="0" style="font-size:1.2rem;padding:14px 28px">▶ Start vraag 1</button>
       <button class="bad" data-cmd="closeRound" data-confirm="Ronde stoppen?">⏹ Stop ronde</button>`;
   }
-  const done = S.players.filter((p) => answered(p.id, q)).length;
+  const done = S.progress ? S.progress.done : S.players.filter((p) => answered(p.id, q)).length;
   const status = S.qRevealed ? '👁 Antwoord getoond' : S.qOpen ? '🟢 Vraag open' : '🔴 Vraag gesloten';
   const last = S.qIndex + 1 >= r.questions.length;
   h += `<div class="card" style="background:var(--card2)">
@@ -164,7 +164,7 @@ function steppedHTML(r, st) {
     ${q.image ? `<img class="qimg" style="max-height:200px" src="${esc(q.image)}" alt="">` : ''}
     <div class="hint" style="margin-top:6px">Antwoord: <b>${esc(correctText(q))}</b></div>
     ${q.note ? `<div class="small mute">${esc(q.note)}</div>` : ''}
-    <div class="row wrap-r" style="margin-top:10px;font-size:1.1rem;font-weight:700"><span>${status}</span>${S.qOpen && S.endsAt ? '<span class="timer" id="adTimer"></span>' : ''}<span class="mute small">${done} van ${S.players.length} hebben geantwoord</span></div></div>
+    <div class="row wrap-r" style="margin-top:10px;font-size:1.1rem;font-weight:700"><span>${status}</span>${S.qOpen && S.endsAt ? '<span class="timer" id="adTimer"></span>' : ''}<span class="mute small">${done} van ${S.players.length} zijn klaar</span></div></div>
     <div class="row wrap-r">
       <button data-cmd="closeQ" ${S.qOpen ? '' : 'disabled'}>⏹ Sluit vraag</button>
       <button data-cmd="extend" data-n-seconds="15">+15 s</button>

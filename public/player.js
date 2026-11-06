@@ -47,7 +47,7 @@ function onMsg(m) {
   } else if (m.t === 'ack') {
     delete pending[m.qid];
     const sv = $('#sv');
-    if (sv && curQid === m.qid) sv.textContent = '✓ Opgeslagen';
+    if (sv && curQid === m.qid) sv.textContent = sv.dataset.lock ? '🔒 Vergrendeld' : '✓ Opgeslagen';
   } else if (m.t === 'nack') {
     const sv = $('#sv');
     if (sv) sv.textContent = 'Tijd is om: dit antwoord is niet meer opgeslagen.';
@@ -329,40 +329,46 @@ function buildStepped() {
       <div class="tbar"><i id="tbar"></i></div><div class="qlab" id="qlab"></div><div class="segs" id="segs"></div></div>
     <div class="card" id="qc"></div><div id="res"></div><div id="rank"></div><div id="ssb"></div></div>`;
   const tm = $('#tm');
-  let key = null, curQ = null, myVal, dirty = false, saveTimer = null;
+  let key = null, curQ = null, myVal, dirty = false, saveTimer = null, locked = false;
 
-  const sendNow = () => {
+  const sendNow = (lock) => {
     clearTimeout(saveTimer);
     if (!curQ || myVal === undefined) return;
+    if (lock) locked = true;
     dirty = false;
     pending[curQ.id] = true;
     const sv = $('#sv');
     if (sv && curQid === curQ.id) sv.textContent = 'Opslaan…';
-    if (!sock.send({ t: 'answer', qid: curQ.id, value: myVal }) && sv) sv.textContent = 'Offline: wordt opnieuw verstuurd.';
+    if (!sock.send({ t: 'answer', qid: curQ.id, value: myVal, lock: locked || undefined }) && sv) sv.textContent = 'Offline: wordt opnieuw verstuurd.';
   };
 
   function card() {
-    const q = curQ, open = !!S.qOpen;
+    const q = curQ, open = !!S.qOpen, canEdit = open && !locked;
     curQid = q.id;
     let h = `<div class="qtext">${esc(q.text)}</div>`;
     if (q.image) h += `<img class="qimg" src="${esc(q.image)}" alt="">`;
     if (q.type === 'choice') {
-      h += '<div class="opts">' + q.options.map((o, i) => `<button class="opt ${myVal !== undefined && Number(myVal) === i ? 'sel' : ''}" data-i="${i}" ${open ? '' : 'disabled'}>${esc(o)}</button>`).join('') + '</div>';
+      h += '<div class="opts">' + q.options.map((o, i) => `<button class="opt ${myVal !== undefined && Number(myVal) === i ? 'sel' : ''}" data-i="${i}" ${canEdit ? '' : 'disabled'}>${esc(o)}</button>`).join('') + '</div>';
     } else {
-      h += `<input id="inp" type="text" ${q.type === 'number' ? 'inputmode="decimal"' : ''} autocomplete="off" autocapitalize="sentences" placeholder="Jouw antwoord" value="${esc(myVal == null ? '' : myVal)}" ${open ? '' : 'disabled'}>`;
+      h += `<input id="inp" type="text" ${q.type === 'number' ? 'inputmode="decimal"' : ''} autocomplete="off" autocapitalize="sentences" placeholder="Jouw antwoord" value="${esc(myVal == null ? '' : myVal)}" ${canEdit ? '' : 'disabled'}>`;
+      if (open) h += `<button class="btn" id="lockbtn" ${locked || myVal == null || String(myVal).trim() === '' ? 'disabled' : ''}>${locked ? '🔒 Vergrendeld' : 'Vergrendel antwoord'}</button>`;
     }
-    h += `<div class="saved" id="sv">${pending[q.id] ? 'Opslaan…' : myVal !== undefined && myVal !== '' ? '✓ Opgeslagen' : ''}</div>`;
+    h += `<div class="saved" id="sv" data-lock="${q.type === 'choice' || locked ? 1 : ''}">${pending[q.id] ? 'Opslaan…' : locked ? '🔒 Vergrendeld' : myVal !== undefined && myVal !== '' ? '✓ Opgeslagen' : ''}</div>`;
     $('#qc').innerHTML = h;
     const inp = $('#inp');
     if (inp) {
-      inp.addEventListener('input', () => { myVal = inp.value; dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(sendNow, 300); });
+      const lb = $('#lockbtn');
+      const syncLock = () => { if (lb) lb.disabled = locked || String(myVal == null ? '' : myVal).trim() === ''; };
+      inp.addEventListener('input', () => { myVal = inp.value; dirty = true; syncLock(); clearTimeout(saveTimer); saveTimer = setTimeout(() => sendNow(), 300); });
       inp.addEventListener('blur', () => { if (dirty) sendNow(); });
       inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') inp.blur(); });
-      if (open && !myVal) inp.focus({ preventScroll: true });
+      if (lb) lb.addEventListener('click', () => { if (String(myVal == null ? '' : myVal).trim() === '') return; sendNow(true); card(); });
+      if (canEdit && !myVal) inp.focus({ preventScroll: true });
     }
     $$('.opt', $('#qc')).forEach((b) => b.addEventListener('click', () => {
+      if (locked) return;
       myVal = Number(b.dataset.i);
-      sendNow();
+      sendNow(true);
       card();
     }));
   }
@@ -402,7 +408,8 @@ function buildStepped() {
       const k = q.id + '|' + !!S.qOpen + '|' + !!S.qRevealed;
       if (k !== key) {
         if (dirty) sendNow();
-        if (!curQ || curQ.id !== q.id) { myVal = S.myAnswer; dirty = false; }
+        if (!curQ || curQ.id !== q.id) { myVal = S.myAnswer; dirty = false; locked = !!S.myLocked; }
+        else if (S.myLocked) locked = true;
         key = k; curQ = q;
         card();
       }
@@ -415,7 +422,7 @@ function buildStepped() {
           <div class="rpts">${good ? '+' + fmtPts(r.points) + (r.points === 1 ? ' punt' : ' punten') : '0 / ' + fmtPts(r.max) + ' punt'}</div>
           <div class="rmine">${r.mine ? 'Jij: ' + esc(r.mine) : 'Je vulde niets in.'}</div></div>`;
       } else if (!S.qOpen) {
-        res = '<div class="card center"><div class="rtitle" style="font-size:1.6rem">Tijd is om!</div><p class="mute">Wacht op het juiste antwoord…</p></div>';
+        res = `<div class="card center"><div class="rtitle" style="font-size:1.6rem">${S.myLocked ? 'Vergrendeld!' : 'Tijd is om!'}</div><p class="mute">Wacht op het juiste antwoord…</p></div>`;
       }
       const rh = res + (S.scoreboard ? `<div class="card"><h2>${ICON_TROPHY} Tussenstand</h2>${scoreboardHTML(S.scoreboard, S.me.id)}</div>` : '');
       if ($('#res')._h !== rh) { $('#res')._h = rh; $('#res').innerHTML = rh; }

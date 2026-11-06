@@ -46,10 +46,10 @@ function render() {
     let side;
     if (S.qRevealed) side = `<div class="answerbox"><div class="sub">Antwoord</div><div class="who">${esc(S.revealAnswer)}</div></div>`;
     else if (S.qOpen) side = ringHTML('s');
-    else side = '<div class="answerbox"><div class="who" style="color:var(--gold)">Tijd is om!</div></div>';
+    else side = `<div class="answerbox"><div class="who" style="color:var(--gold)">${p.total > 0 && p.done >= p.total ? 'Iedereen is klaar!' : 'Tijd is om!'}</div></div>`;
     return set(`<div class="tvq"><div class="tvhead"><span class="eyebrow">Ronde ${S.roundIndex + 1} · ${esc(r.title)}</span><span class="pill">Vraag <b>${S.qIndex + 1}</b> van ${S.qCount}</span></div>
       <div class="tvmain"><div class="q">${esc(q.text)}${q.image ? `<img src="${esc(q.image)}" alt="">` : ''}</div>${side}</div>
-      ${S.qRevealed || !S.qOpen ? '' : barHTML(`${p.done} van ${p.total} hebben geantwoord`, p)}</div>`);
+      ${S.qRevealed || !S.qOpen ? '' : barHTML(`${p.done} van ${p.total} zijn klaar`, p)}</div>`);
   }
 
   if (r.mode === 'buzzer' && S.roundState === 'running') {

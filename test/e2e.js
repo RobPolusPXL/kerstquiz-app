@@ -180,6 +180,37 @@ async function player(name, token) {
   cmd({ cmd: 'closeQ' });
   await an2.state((s) => !s.qOpen);
 
+  // --- stepped: meerkeuze is definitief, vraag sluit vroeg als iedereen gekozen heeft
+  cmd({ cmd: 'gotoQ', index: 1 });
+  const mc = await an2.state((s) => s.question && s.qIndex === 1 && s.qOpen);
+  an2.send({ t: 'answer', qid: mc.question.id, value: 0 });
+  await an2.state((s) => s.myAnswer === 0 && s.myLocked === true);
+  an2.send({ t: 'answer', qid: mc.question.id, value: 1 });
+  await sleep(150);
+  ok(an2.last.myAnswer === 0 && an2.last.qOpen, 'stepped: meerkeuze is definitief na de eerste keuze, vraag blijft open zolang niet iedereen koos');
+  bo.send({ t: 'answer', qid: mc.question.id, value: 1 });
+  await sleep(150);
+  ok(an2.last.qOpen, 'stepped: vraag blijft open zolang een verbonden speler nog niet koos');
+  cy.send({ t: 'answer', qid: mc.question.id, value: 2 });
+  const early1 = await an2.state((s) => !s.qOpen, 3000);
+  ok(early1.endsAt > Date.now() && early1.myAnswer === 0, 'stepped: vraag sluit vroeg zodra alle spelers gekozen hebben');
+
+  // --- stepped: tekstvraag sluit pas na vergrendelen van iedereen
+  cmd({ cmd: 'gotoQ', index: 0 });
+  await an2.state((s) => s.qIndex === 0 && s.qOpen);
+  an2.send({ t: 'answer', qid: 't2q1', value: 'canberra', lock: true });
+  await an2.state((s) => s.myLocked === true);
+  an2.send({ t: 'answer', qid: 't2q1', value: 'sydney' });
+  bo.send({ t: 'answer', qid: 't2q1', value: 'Melbourne' });
+  await sleep(150);
+  ok(an2.last.qOpen && an2.last.myAnswer === 'canberra', 'stepped: tekstantwoord vergrendeld = definitief; zonder vergrendelen van iedereen blijft de vraag open');
+  bo.send({ t: 'answer', qid: 't2q1', value: 'Melbourne', lock: true });
+  await sleep(150);
+  ok(an2.last.qOpen, 'stepped: vraag blijft open zolang een verbonden speler niet vergrendeld heeft');
+  cy.send({ t: 'answer', qid: 't2q1', value: 'Perth', lock: true });
+  const early2 = await an2.state((s) => !s.qOpen, 3000);
+  ok(early2.endsAt > Date.now(), 'stepped: tekstvraag sluit vroeg als iedereen vergrendeld heeft');
+
   // --- ronde 3 (buzzer)
   cmd({ cmd: 'selectRound', index: 2 });
   cmd({ cmd: 'startRound' });

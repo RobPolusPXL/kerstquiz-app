@@ -94,6 +94,7 @@ const freshState = () => ({
   buzz: freshBuzz(),
   players: {},
   answers: {},
+  locks: {},
   marks: {},
   showScoreboard: false,
   reveal: {},
@@ -312,6 +313,7 @@ function playerView(c) {
     const q = r.questions[state.qIndex];
     const a = (state.answers[me.id] || {})[q.id];
     if (a !== undefined) v.myAnswer = a;
+    v.myLocked = isLocked(me.id, q);
     if (state.qRevealed) v.result = { mine: answerText(q, a), points: r2(qp(me.id, q).points), max: q.points };
   }
   if (r && v.buzz) {
@@ -343,7 +345,8 @@ function tvView() {
   }
   if (r && r.mode === 'stepped' && state.roundState === 'running' && v.question) {
     const players = Object.values(state.players);
-    v.progress = { done: players.filter((p) => { const a = (state.answers[p.id] || {})[v.question.id]; return a !== undefined && String(a).trim() !== ''; }).length, total: players.length };
+    const cq = r.questions[state.qIndex];
+    v.progress = { done: players.filter((p) => isLocked(p.id, cq)).length, total: players.length };
   }
   return v;
 }
@@ -398,6 +401,20 @@ let bcQueued = false;
 function broadcast() {
   bcQueued = false;
   for (const [ws, c] of clients) send(ws, viewFor(c));
+}
+/* stepped-ronde: meerkeuze is definitief bij de eerste keuze, tekst/getal na 'vergrendelen'; zodra alle verbonden spelers klaar zijn, sluit de vraag */
+function isLocked(pid, q) {
+  if (q.type === 'choice') return ((state.answers[pid] || {})[q.id]) !== undefined;
+  return !!((state.locks && state.locks[pid]) || {})[q.id];
+}
+function checkAllLocked() {
+  const r = curRound();
+  if (!r || r.mode !== 'stepped' || state.roundState !== 'running' || !state.qOpen) return;
+  const q = r.questions[state.qIndex];
+  if (!q) return;
+  const online = Object.values(state.players).filter((p) => isOnline(p.id));
+  if (!online.length) return;
+  if (online.every((p) => isLocked(p.id, q))) state.qOpen = false;
 }
 function changed() {
   saveSoon();
@@ -591,7 +608,7 @@ function adminCmd(msg) {
     case 'kick':
       if (state.players[msg.pid]) {
         delete state.players[msg.pid];
-        delete state.answers[msg.pid];
+        delete state.answers[msg.pid]; if (state.locks) delete state.locks[msg.pid];
         delete state.marks[msg.pid];
         for (const c of clients.values()) if (c.pid === msg.pid) c.pid = null;
       }
@@ -610,7 +627,7 @@ function adminCmd(msg) {
         for (const c of clients.values()) if (!c.admin) c.pid = null;
       } else {
         state.roundIndex = -1; state.roundState = 'idle'; state.endsAt = null; resetLive();
-        state.answers = {}; state.marks = {}; state.reveal = {}; state.showScoreboard = false;
+        state.answers = {}; state.locks = {}; state.marks = {}; state.reveal = {}; state.showScoreboard = false;
       }
       break;
     default:
@@ -670,8 +687,17 @@ function onMessage(ws, c, msg) {
         val = String(val == null ? '' : val).slice(0, 200);
       }
       state.answers[p.id] = state.answers[p.id] || {};
-      state.answers[p.id][q.id] = val;
+      const stepped = r.mode === 'stepped';
+      if (!(stepped && isLocked(p.id, q))) { // vergrendeld = definitief
+        state.answers[p.id][q.id] = val;
+        if (stepped && msg.lock && String(val).trim() !== '') {
+          state.locks = state.locks || {};
+          state.locks[p.id] = state.locks[p.id] || {};
+          state.locks[p.id][q.id] = true;
+        }
+      }
       send(ws, { t: 'ack', qid: q.id });
+      checkAllLocked();
       changed();
       break;
     }
@@ -796,7 +822,7 @@ wss.on('connection', (ws) => {
     try { onMessage(ws, c, msg); } catch (e) { console.error('[kerstquiz] fout:', e); }
     if (msg.t === 'hello') send(ws, viewFor(c));
   });
-  ws.on('close', () => { clients.delete(ws); changed(); });
+  ws.on('close', () => { clients.delete(ws); checkAllLocked(); changed(); });
   ws.on('error', () => {});
   send(ws, viewFor(c));
 });
