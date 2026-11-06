@@ -121,6 +121,20 @@
           "correct": 0
         },
         {
+          "id": "r2q8",
+          "type": "choice",
+          "text": "Augustus: wat gebeurde er NIET in augustus?",
+          "options": [
+            "Een totale zonsverduistering boven delen van Europa",
+            "Pluto wordt opnieuw erkend als planeet",
+            "Koning Harald V van Noorwegen overlijdt",
+            "Een zware aardbeving treft Colombia",
+            "Meta schikt een rechtszaak van Amerikaanse staten over kinderveiligheid"
+          ],
+          "correct": 1,
+          "note": "Echt: zonsverduistering 12/8, aardbeving Colombia 10/8, Meta-schikking 26/8, Harald V 28/8."
+        },
+        {
           "id": "r2q9",
           "type": "choice",
           "text": "September: Apple presenteerde zijn eerste opvouwbare iPhone. Hoe heet die?",
