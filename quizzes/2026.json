@@ -99,6 +99,16 @@
           "correct": 0
         },
         {
+          "id": "r2q6",
+          "type": "text",
+          "text": "Juni: wie werd de eerste biljonair ter wereld?",
+          "answers": [
+            "Elon Musk",
+            "Musk",
+            "Elon"
+          ]
+        },
+        {
           "id": "r2q7",
           "type": "choice",
           "text": "Juli: welk land werd wereldkampioen voetbal?",
