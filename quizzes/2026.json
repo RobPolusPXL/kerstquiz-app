@@ -41,6 +41,19 @@
           ],
           "correct": 1,
           "note": "Atkinson bij Graham Norton (dec 2025): hij zag in de jaren 90 de kans om uitzending in Italië te voorkomen omdat hij er graag op vakantie ging. Grotendeels een grap/anekdote van hemzelf; de serie liep er pas later (1997)."
+        },
+        {
+          "id": "r1q4",
+          "type": "choice",
+          "text": "De kerstman woont officieel in Rovaniemi, in Lapland. In welk land ligt die stad?",
+          "options": [
+            "Zweden",
+            "Noorwegen",
+            "Finland",
+            "Rusland"
+          ],
+          "correct": 2,
+          "note": "Rovaniemi ligt in Finland (Santa Claus Village, aan de poolcirkel). Lapland als streek loopt over Noorwegen, Zweden, Finland en Rusland."
         }
       ]
     },
