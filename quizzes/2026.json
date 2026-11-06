@@ -147,6 +147,18 @@
           "correct": 0
         },
         {
+          "id": "r2q10",
+          "type": "choice",
+          "text": "Oktober: een hogesnelheidstrein botste op een andere trein. Het was al het tweede zware ongeluk met een hogesnelheidstrein dit jaar in datzelfde land. In welk land gebeurde dit?",
+          "options": [
+            "Frankrijk",
+            "Italië",
+            "Portugal",
+            "Spanje"
+          ],
+          "correct": 3
+        },
+        {
           "id": "r2q11",
           "type": "choice",
           "text": "November: welke langverwachte game verscheen eindelijk, na jaren uitstel?",
