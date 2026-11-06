@@ -224,7 +224,28 @@
       "mode": "buzzer",
       "minutes": 15,
       "intro": "Wie het eerst buzzt, mag antwoorden. Fout? Dan mogen de anderen.",
-      "questions": []
+      "questions": [
+        {
+          "id": "r3q1",
+          "type": "text",
+          "text": "De Guldensporenslag: op welke dag en in welke maand vond de slag plaats?",
+          "answers": [
+            "11 juli",
+            "11/7",
+            "11-7"
+          ],
+          "note": "Slag der Gulden Sporen bij Kortrijk: 11 juli 1302 (1 punt voor dag + maand; het jaar volgt in de volgende vraag)."
+        },
+        {
+          "id": "r3q2",
+          "type": "text",
+          "text": "En in welk jaar vond de Guldensporenslag plaats?",
+          "answers": [
+            "1302"
+          ],
+          "note": "1302 (1 punt)."
+        }
+      ]
     }
   ]
 }
