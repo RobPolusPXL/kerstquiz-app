@@ -18,6 +18,15 @@
             "Kiribati"
           ],
           "note": "Eiland Kiritimati (UTC+14), Kiribati."
+        },
+        {
+          "id": "r1q2",
+          "type": "number",
+          "text": "Een boek kost 10 euro plus de helft van zijn prijs. Hoeveel euro kost het boek?",
+          "answers": [
+            "20"
+          ],
+          "note": "p = 10 + p/2, dus p = 20."
         }
       ]
     },
