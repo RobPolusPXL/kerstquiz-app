@@ -73,6 +73,34 @@
             "13"
           ],
           "note": "Volgorde van bewerkingen: 9 × 0 = 0 eerst, dus 3 + 6 − 0 + 4 = 13. Val-antwoord bij links naar rechts rekenen: 4."
+        },
+        {
+          "id": "r1q7",
+          "type": "text",
+          "points": 2,
+          "text": "De Guldensporenslag bij Kortrijk: op welke dag en in welke maand vond de slag plaats?",
+          "answers": [
+            "11 juli",
+            "11/7",
+            "11-7",
+            "11/07",
+            "11-07",
+            "11.7",
+            "11.07",
+            "11 7",
+            "11 07"
+          ],
+          "note": "11 juli 1302 (Vlaamse feestdag). 2 punten voor dag + maand."
+        },
+        {
+          "id": "r1q8",
+          "type": "number",
+          "points": 2,
+          "text": "In welk jaar vond de Guldensporenslag plaats?",
+          "answers": [
+            "1302"
+          ],
+          "note": "1302. 2 punten."
         }
       ]
     },
@@ -224,28 +252,7 @@
       "mode": "buzzer",
       "minutes": 15,
       "intro": "Wie het eerst buzzt, mag antwoorden. Fout? Dan mogen de anderen.",
-      "questions": [
-        {
-          "id": "r3q1",
-          "type": "text",
-          "text": "De Guldensporenslag: op welke dag en in welke maand vond de slag plaats?",
-          "answers": [
-            "11 juli",
-            "11/7",
-            "11-7"
-          ],
-          "note": "Slag der Gulden Sporen bij Kortrijk: 11 juli 1302 (1 punt voor dag + maand; het jaar volgt in de volgende vraag)."
-        },
-        {
-          "id": "r3q2",
-          "type": "text",
-          "text": "En in welk jaar vond de Guldensporenslag plaats?",
-          "answers": [
-            "1302"
-          ],
-          "note": "1302 (1 punt)."
-        }
-      ]
+      "questions": []
     }
   ]
 }
