@@ -75,6 +75,18 @@
           "correct": 0
         },
         {
+          "id": "r2q4",
+          "type": "choice",
+          "text": "April: voor het eerst sinds 1972 vloog er weer een bemande capsule rond de maan. Hoe heet die missie?",
+          "options": [
+            "Apollo 18",
+            "Artemis II",
+            "Orion I",
+            "Starship I"
+          ],
+          "correct": 1
+        },
+        {
           "id": "r2q5",
           "type": "choice",
           "text": "Mei: welk land won het Eurovisiesongfestival?",
