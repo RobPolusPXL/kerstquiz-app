@@ -26,7 +26,8 @@
           "answers": [
             "20"
           ],
-          "note": "p = 10 + p/2, dus p = 20."
+          "note": "p = 10 + p/2, dus p = 20.",
+          "seconds": 90
         },
         {
           "id": "r1q3",

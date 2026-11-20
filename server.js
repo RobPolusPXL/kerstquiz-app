@@ -71,6 +71,7 @@ function loadQuiz() {
         correct: Number.isInteger(q.correct) ? q.correct : null,
         answers: Array.isArray(q.answers) ? q.answers.map(String) : q.answer ? [String(q.answer)] : [],
         parts: Array.isArray(q.parts) && q.parts.length ? q.parts.map((p) => ({ answers: (Array.isArray(p.answers) ? p.answers : [p.answer]).filter((a) => a != null).map(String), points: p.points === undefined ? 1 : Number(p.points) })) : null,
+        seconds: q.seconds === undefined ? null : Number(q.seconds) || 0,
         points: q.points !== undefined ? Number(q.points) : Array.isArray(q.parts) && q.parts.length ? q.parts.reduce((t, p) => t + (p.points === undefined ? 1 : Number(p.points)), 0) : 1,
         note: q.note || ''
       }))
@@ -570,7 +571,8 @@ function adminCmd(msg) {
         state.qIndex = i;
         state.qOpen = true;
         state.qRevealed = false;
-        state.endsAt = r.seconds > 0 ? Date.now() + r.seconds * 1000 : null;
+        const sec = r.questions[i] && r.questions[i].seconds !== null ? r.questions[i].seconds : r.seconds; // tijd per vraag gaat voor
+        state.endsAt = sec > 0 ? Date.now() + sec * 1000 : null;
       }
       break;
     }
