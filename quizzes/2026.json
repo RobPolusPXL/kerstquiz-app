@@ -102,6 +102,20 @@
             }
           ],
           "note": "11 juli 1302 (Vlaamse feestdag). 1 punt voor dag + maand, 1 punt voor het jaar. Typ je '11 juli 1302', dan krijg je automatisch 2 punten; elk deel telt apart. De moderator kan altijd corrigeren."
+        },
+        {
+          "id": "r1q8",
+          "type": "choice",
+          "text": "Wat is het chemisch symbool van goud?",
+          "options": [
+            "Ag",
+            "Au",
+            "Go",
+            "Gd",
+            "Pt"
+          ],
+          "correct": 1,
+          "note": "Au (Latijn: aurum). Ag = zilver, Gd = gadolinium, Pt = platina, Go bestaat niet."
         }
       ]
     },
