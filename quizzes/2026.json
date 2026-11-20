@@ -280,7 +280,18 @@
       "mode": "buzzer",
       "minutes": 15,
       "intro": "Wie het eerst buzzt, mag antwoorden. Fout? Dan mogen de anderen.",
-      "questions": []
+      "questions": [
+        {
+          "id": "r3q1",
+          "type": "text",
+          "text": "Hoeveel ringen zijn er in het Olympisch logo?",
+          "answers": [
+            "5",
+            "vijf"
+          ],
+          "note": "5 ringen (blauw, geel, zwart, groen, rood): de vijf werelddelen."
+        }
+      ]
     }
   ]
 }
