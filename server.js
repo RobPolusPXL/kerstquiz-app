@@ -296,6 +296,7 @@ function baseView() {
       openAt: state.buzz.openAt,
       lockedByName: nameOf(state.buzz.lockedBy),
       winnerName: nameOf(state.buzz.winner),
+      answer: state.buzz.winner && q ? (q.type === 'choice' || q.parts || !q.answers.length ? correctText(q) : q.answers[0]) : null, // juist antwoord pas zichtbaar na 'Juist'
       excludedNames: state.buzz.excluded.map(nameOf).filter(Boolean)
     };
   }

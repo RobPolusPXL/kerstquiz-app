@@ -62,7 +62,7 @@ function render() {
       clearTimeout(tvWait); tvWait = setTimeout(render, Math.max(0, b.openAt - serverNow()) + 10);
     }
     else if (b.open) status = '<div class="who" style="color:var(--gold)">🔔 BUZZ!</div>';
-    else if (b.winnerName) status = `<div class="who">✔ ${esc(b.winnerName)}</div>`;
+    else if (b.winnerName) status = `${b.answer ? `<div class="sub">Antwoord</div><div class="who" style="color:var(--ok)">${esc(b.answer)}</div>` : ''}<div class="sub">✔ Punt voor ${esc(b.winnerName)}</div>`;
     else status = '<div class="sub">Even luisteren…</div>';
     return set(`<div class="tvhead" style="width:100%"><span class="eyebrow">Ronde ${S.roundIndex + 1} · ${esc(r.title)}</span><span class="pill">Vraag <b>${S.qIndex + 1}</b> van ${S.qCount}</span></div><div class="q">${esc(q.text)}</div>
       ${q.image ? `<img src="${esc(q.image)}" alt="">` : ''}${status}

@@ -322,7 +322,7 @@ function buildBuzz() {
         waitT = setTimeout(() => { rafId = requestAnimationFrame(tick); }, Math.max(0, at - serverNow() - 500));
       }
       else if (b.open) { cls += ' live'; label = 'BUZZ!'; status = ''; active = true; }
-      else if (b.winnerName) { cls += b.winnerMe ? ' me' : ''; label = b.winnerMe ? '🎉' : '✔'; status = b.winnerMe ? 'Juist! Punt voor jou!' : `Juist! Punt voor ${b.winnerName}`; }
+      else if (b.winnerName) { cls += b.winnerMe ? ' me' : ''; label = b.winnerMe ? '🎉' : '✔'; status = (b.winnerMe ? 'Juist! Punt voor jou!' : `Juist! Punt voor ${b.winnerName}`) + (b.answer ? ` Antwoord: ${b.answer}` : ''); }
       else { label = '⏳'; status = 'Wacht tot de buzzer opent'; }
       const btn = $('#bz');
       btn.className = cls;
