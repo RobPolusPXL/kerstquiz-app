@@ -277,7 +277,16 @@ function buildBuzz() {
     <div class="card"><div class="qtext" id="bq"></div><img id="bi" class="qimg" hidden alt=""></div>
     <div class="buzzwrap"><div class="halo"><button class="buzz" id="bz"></button></div><div class="bigstatus" id="bs"></div></div>
     <div id="bsb" style="margin-top:18px"></div></div>`;
-  let active = false, waitT = null;
+  let active = false, waitT = null, rafId = null;
+  const stopWait = () => { clearTimeout(waitT); if (rafId) cancelAnimationFrame(rafId); rafId = null; };
+  // knop meteen live zetten zonder het scherm opnieuw op te bouwen (zo min mogelijk vertraging)
+  const goLive = () => {
+    const btn = $('#bz');
+    btn.className = 'buzz live';
+    btn.textContent = 'BUZZ!';
+    $('#bs').textContent = '';
+    active = true;
+  };
   const press = () => {
     if (!active) return;
     sock.send({ t: 'buzz' });
@@ -290,9 +299,9 @@ function buildBuzz() {
   $('#bz').addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); press(); } });
 
   return {
-    destroy() { clearTimeout(waitT); },
+    destroy() { stopWait(); },
     update() {
-      clearTimeout(waitT);
+      stopWait();
       const b = S.buzz, q = S.question;
       $('#bh0').textContent = `Ronde ${S.roundIndex + 1} · ${S.rounds[S.roundIndex].title}`;
       $('#bh').textContent = q ? `Vraag ${S.qIndex + 1} van ${S.qCount}` : 'Zet je schrap';
@@ -307,7 +316,10 @@ function buildBuzz() {
       else if (b.open && b.excludedMe) { label = '✋'; status = 'Fout, de anderen mogen nu.'; }
       else if (b.open && b.openAt && serverNow() < b.openAt) {
         cls += ' wait'; label = 'KLAAR…'; status = 'Maak je klaar';
-        waitT = setTimeout(() => { if (screen.key && screen.key.startsWith('buzz')) screen.update(); }, Math.max(0, b.openAt - serverNow()));
+        // tot ~0,5 s voor het openen gewoon wachten, daarna bij elke schermverversing (requestAnimationFrame) kijken of het tijd is
+        const at = b.openAt;
+        const tick = () => { if (serverNow() >= at) { rafId = null; goLive(); } else rafId = requestAnimationFrame(tick); };
+        waitT = setTimeout(() => { rafId = requestAnimationFrame(tick); }, Math.max(0, at - serverNow() - 500));
       }
       else if (b.open) { cls += ' live'; label = 'BUZZ!'; status = ''; active = true; }
       else if (b.winnerName) { cls += b.winnerMe ? ' me' : ''; label = b.winnerMe ? '🎉' : '✔'; status = b.winnerMe ? 'Juist! Punt voor jou!' : `Juist! Punt voor ${b.winnerName}`; }
