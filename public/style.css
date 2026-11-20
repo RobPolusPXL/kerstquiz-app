@@ -263,7 +263,7 @@ button.seg::after { content: ""; position: absolute; inset: -10px -1px; }
 .buzz.live { background: radial-gradient(circle at 35% 28%, #ff8a7d 0%, #e0463a 38%, #b32a20 100%); }
 
 /* v2: tv */
-.tvq { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 3vh; text-align: left; }
+.tvq { width: 100%; max-width: min(1600px, 90vw); display: flex; flex-direction: column; gap: 3vh; text-align: left; }
 .tvhead { display: flex; align-items: center; justify-content: space-between; gap: 2vw; }
 .tvhead .eyebrow { font-size: 1.9vw; letter-spacing: .14em; }
 .tvhead .pill { font-size: 2.2vw; font-weight: 700; padding: .7vw 2vw; border-color: rgba(255,255,255,.18); color: var(--cream); }
@@ -291,3 +291,11 @@ button.seg::after { content: ""; position: absolute; inset: -10px -1px; }
 .rk-badge.r1 { background: linear-gradient(135deg,#ffe08a,#f2c14e); color: #3b2a00; }
 .rk-badge.r2 { background: linear-gradient(135deg,#f1f5f3,#b8c4be); color: #3b2a00; }
 .rk-badge.r3 { background: linear-gradient(135deg,#f0b27a,#c27a3e); color: #3b2a00; }
+
+/* tv: vraag krijgt de ruimte, zijbalk beperkt */
+.tvmain .q { flex: 1 1 60%; min-width: 0; }
+.tvmain .q.long { font-size: 3.8vw; }
+.tvmain .q.xlong { font-size: 3.1vw; }
+.tvmain .answerbox { flex: 0 1 32vw; min-width: 0; max-width: 32vw; }
+.tvmain .answerbox .who { font-size: 4.2vw; line-height: 1.1; overflow-wrap: anywhere; }
+.tvmain .answerbox .who.long { font-size: 3.2vw; }

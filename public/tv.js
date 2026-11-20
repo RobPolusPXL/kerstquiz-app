@@ -44,11 +44,11 @@ function render() {
     if (!q) return set(`<div class="sub">${esc(r.title)}</div><h1>Zet je schrap…</h1>`);
     const p = S.progress || { done: 0, total: 0 };
     let side;
-    if (S.qRevealed) side = `<div class="answerbox"><div class="sub">Antwoord</div><div class="who">${esc(S.revealAnswer)}</div></div>`;
+    if (S.qRevealed) side = `<div class="answerbox"><div class="sub">Antwoord</div><div class="who${String(S.revealAnswer || '').length > 20 ? ' long' : ''}">${esc(S.revealAnswer)}</div></div>`;
     else if (S.qOpen) side = ringHTML('s');
     else side = `<div class="answerbox"><div class="who" style="color:var(--gold)">${p.total > 0 && p.done >= p.total ? 'Iedereen is klaar!' : 'Tijd is om!'}</div></div>`;
     return set(`<div class="tvq"><div class="tvhead"><span class="eyebrow">Ronde ${S.roundIndex + 1} · ${esc(r.title)}</span><span class="pill">Vraag <b>${S.qIndex + 1}</b> van ${S.qCount}</span></div>
-      <div class="tvmain"><div class="q">${esc(q.text)}${q.image ? `<img src="${esc(q.image)}" alt="">` : ''}</div>${side}</div>
+      <div class="tvmain"><div class="q${q.text.length > 110 ? ' xlong' : q.text.length > 60 ? ' long' : ''}">${esc(q.text)}${q.image ? `<img src="${esc(q.image)}" alt="">` : ''}</div>${side}</div>
       ${S.qRevealed || !S.qOpen ? '' : barHTML(`${p.done} van ${p.total} zijn klaar`, p)}</div>`);
   }
 
