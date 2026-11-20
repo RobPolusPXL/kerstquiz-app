@@ -116,6 +116,19 @@
           ],
           "correct": 1,
           "note": "Au (Latijn: aurum). Ag = zilver, Gd = gadolinium, Pt = platina, Go bestaat niet."
+        },
+        {
+          "id": "r1q9",
+          "type": "choice",
+          "text": "Hoe groot was de grootst gemeten giraf ooit?",
+          "options": [
+            "4,8 meter",
+            "5,8 meter",
+            "6,8 meter",
+            "7,8 meter"
+          ],
+          "correct": 1,
+          "note": "George, Masai-giraf in Chester Zoo (VK), 5,8 m (Guinness World Records). Grootste levende: Forest, Australia Zoo, 5,7 m."
         }
       ]
     },
