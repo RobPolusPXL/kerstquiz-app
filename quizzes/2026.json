@@ -225,16 +225,15 @@
         {
           "id": "r2q8",
           "type": "choice",
-          "text": "Augustus: wat gebeurde er NIET in augustus?",
+          "text": "Augustus: wie won de Tour de France Femmes?",
           "options": [
-            "Een totale zonsverduistering boven delen van Europa",
-            "Pluto wordt opnieuw erkend als planeet",
-            "Koning Harald V van Noorwegen overlijdt",
-            "Een zware aardbeving treft Colombia",
-            "Meta schikt een rechtszaak van Amerikaanse staten over kinderveiligheid"
+            "Lotte Kopecky",
+            "Demi Vollering",
+            "Kasia Niewiadoma",
+            "Lorena Wiebes"
           ],
           "correct": 1,
-          "note": "Echt: zonsverduistering 12/8, aardbeving Colombia 10/8, Meta-schikking 26/8, Harald V 28/8."
+          "note": "Demi Vollering (NL, FDJ United-Suez), 9 augustus 2026 in Nice; haar tweede eindzege na 2023. Tweede: Kasia Niewiadoma-Phinney."
         },
         {
           "id": "r2q9",
