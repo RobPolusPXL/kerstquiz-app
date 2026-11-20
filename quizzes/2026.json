@@ -290,6 +290,17 @@
             "vijf"
           ],
           "note": "5 ringen (blauw, geel, zwart, groen, rood): de vijf werelddelen."
+        },
+        {
+          "id": "r3q2",
+          "type": "text",
+          "text": "Wie tekende de strip Nero?",
+          "answers": [
+            "Marc Sleen",
+            "Sleen",
+            "Marcel Neels"
+          ],
+          "note": "Marc Sleen (pseudoniem van Marcel Neels, 1922-2016). De Avonturen van Detective Van Zwam / Nero liep van 1947 tot 2002."
         }
       ]
     }
